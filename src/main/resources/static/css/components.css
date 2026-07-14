@@ -1,0 +1,485 @@
+/*==========================================
+   components.css - PCGestor
+   Versión: 1.0
+   Estilos de componentes reutilizables para todos los módulos
+==========================================*/
+
+/* ========== IMPORTACIÓN DE FUENTES (si no está en styles.css) ========== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ========== VARIABLES GLOBALES ========== */
+:root {
+    --primary: #3498db;
+    --primary-dark: #2980b9;
+    --secondary: #2c3e50;
+    --success: #27ae60;
+    --info: #3498db;
+    --warning: #f39c12;
+    --danger: #e74c3c;
+    --light: #f8f9fc;
+    --dark: #2c3e50;
+    --gray: #6c757d;
+    --gray-light: #e9ecef;
+    --sidebar-bg: #34495e;
+    --sidebar-link: #ecf0f1;
+    --sidebar-hover: #2c3e50;
+    --sidebar-active: #3498db;
+    --border-radius: 0.5rem;
+    --box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+    --box-shadow-lg: 0 1rem 3rem rgba(0,0,0,0.175);
+}
+
+/* ========== RESET BASE ========== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f8f9fc;
+    color: #333;
+    line-height: 1.5;
+}
+
+/* ========== SIDEBAR Y NAVBAR ========== */
+.sb-topnav {
+    background-color: var(--secondary) !important;
+    padding: 0 1rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.4rem;
+    letter-spacing: -0.5px;
+}
+
+#sidebarToggle {
+    color: white;
+    font-size: 1.2rem;
+}
+
+.sb-sidenav {
+    background-color: var(--sidebar-bg);
+}
+
+.sb-sidenav-dark .sb-sidenav-menu .nav-link {
+    color: var(--sidebar-link);
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.sb-sidenav-dark .sb-sidenav-menu .nav-link:hover {
+    background-color: var(--sidebar-hover);
+    color: white;
+    padding-left: 1.5rem;
+}
+
+.sb-sidenav-dark .sb-sidenav-menu .nav-link.active {
+    background-color: var(--sidebar-active);
+    color: white;
+    border-left: 4px solid white;
+}
+
+.sb-sidenav-menu-heading {
+    font-size: 0.7rem;
+    letter-spacing: 1px;
+    font-weight: 700;
+}
+
+.sb-sidenav-footer {
+    background-color: #2c3e50;
+    font-size: 0.75rem;
+}
+
+/* ========== TARJETAS (CARDS) ========== */
+.card {
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    transition: transform 0.2s, box-shadow 0.2s;
+    margin-bottom: 1.5rem;
+}
+
+.card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
+}
+
+.card-header {
+    background-color: white;
+    border-bottom: 2px solid var(--primary);
+    font-weight: 600;
+    padding: 1rem 1.25rem;
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+
+.card-body {
+    padding: 1.25rem;
+}
+
+.card-footer {
+    background-color: white;
+    border-top: 1px solid var(--gray-light);
+    padding: 0.75rem 1.25rem;
+}
+
+/* Tarjetas estadísticas (dashboard) */
+.card-stats {
+    overflow: hidden;
+    border-radius: 1rem;
+}
+
+.card-stats .card-body {
+    padding: 1.25rem;
+}
+
+.card-stats h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.card-stats i {
+    font-size: 2rem;
+    opacity: 0.8;
+}
+
+/* ========== TABLAS ========== */
+.table {
+    margin-bottom: 0;
+    vertical-align: middle;
+}
+
+.table thead th {
+    background-color: var(--light);
+    border-bottom: 2px solid var(--gray-light);
+    font-weight: 600;
+    color: var(--secondary);
+}
+
+.table tbody tr:hover {
+    background-color: rgba(52,152,219,0.05);
+}
+
+.table .badge {
+    font-size: 0.75rem;
+    padding: 0.35rem 0.65rem;
+}
+
+/* DataTables personalización */
+.dataTables_wrapper .dataTables_filter input {
+    border-radius: 2rem;
+    padding: 0.375rem 1rem;
+    border: 1px solid var(--gray-light);
+}
+
+.dataTables_wrapper .dataTables_length select {
+    border-radius: 0.375rem;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    border-radius: 0.375rem;
+    margin: 0 0.25rem;
+}
+
+/* ========== BOTONES ========== */
+.btn {
+    font-weight: 500;
+    border-radius: 0.375rem;
+    padding: 0.5rem 1rem;
+    transition: all 0.2s;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+.btn-primary {
+    background-color: var(--primary);
+    border-color: var(--primary);
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+    border-color: var(--primary-dark);
+}
+
+.btn-success {
+    background-color: var(--success);
+    border-color: var(--success);
+}
+
+.btn-warning {
+    background-color: var(--warning);
+    border-color: var(--warning);
+    color: white;
+}
+
+.btn-danger {
+    background-color: var(--danger);
+    border-color: var(--danger);
+}
+
+.btn-outline-light:hover {
+    color: var(--secondary);
+}
+
+/* Botones de acción en tablas */
+.btn-action {
+    padding: 0.2rem 0.5rem;
+    font-size: 0.7rem;
+    margin: 0 2px;
+}
+
+/* ========== MODALES ========== */
+.modal-content {
+    border: none;
+    border-radius: 1rem;
+    overflow: hidden;
+}
+
+.modal-header {
+    background-color: var(--primary);
+    color: white;
+    border-bottom: none;
+    padding: 1rem 1.25rem;
+}
+
+.modal-header .btn-close {
+    filter: brightness(0) invert(1);
+    opacity: 0.8;
+}
+
+.modal-title {
+    font-weight: 600;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-footer {
+    border-top: 1px solid var(--gray-light);
+    padding: 1rem 1.25rem;
+}
+
+/* ========== FORMULARIOS ========== */
+.form-label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: var(--secondary);
+}
+
+.form-control, .form-select {
+    border-radius: 0.375rem;
+    border: 1px solid var(--gray-light);
+    padding: 0.5rem 0.75rem;
+    transition: all 0.2s;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 0.2rem rgba(52,152,219,0.25);
+}
+
+.input-group-text {
+    background-color: var(--light);
+    border-color: var(--gray-light);
+}
+
+/* ========== BADGES Y ETIQUETAS ========== */
+.badge {
+    font-weight: 500;
+    padding: 0.35rem 0.65rem;
+    border-radius: 2rem;
+}
+
+.badge-primary { background-color: var(--primary); }
+.badge-success { background-color: var(--success); }
+.badge-warning { background-color: var(--warning); color: white; }
+.badge-danger { background-color: var(--danger); }
+.badge-info { background-color: var(--info); }
+.badge-secondary { background-color: var(--gray); }
+
+/* ========== ALERTAS ========== */
+.alert {
+    border-radius: 0.5rem;
+    border: none;
+    padding: 1rem 1.25rem;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.alert-info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+
+/* ========== LOGIN ESPECÍFICO ========== */
+.login-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.login-card {
+    background: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 20px 35px rgba(0,0,0,0.1);
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.login-header i {
+    font-size: 3rem;
+    color: #667eea;
+}
+
+.login-header h2 {
+    margin-top: 0.5rem;
+    font-weight: 700;
+}
+
+.btn-login {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    padding: 0.75rem;
+    font-weight: 600;
+}
+
+.toggle-password {
+    cursor: pointer;
+}
+
+.login-footer {
+    margin-top: 1.5rem;
+    text-align: center;
+    border-top: 1px solid var(--gray-light);
+    padding-top: 1rem;
+}
+
+.login-footer a {
+    color: #667eea;
+    text-decoration: none;
+}
+
+.login-footer .separator {
+    margin: 0 0.5rem;
+    color: var(--gray);
+}
+
+/* ========== DASHBOARD GRÁFICOS ========== */
+canvas {
+    max-width: 100%;
+    height: auto;
+}
+
+/* ========== FILTROS ========== */
+.filter-bar {
+    background-color: white;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--box-shadow);
+}
+
+.filter-bar .row {
+    align-items: flex-end;
+}
+
+/* ========== UTILITARIOS ========== */
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.text-truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.shadow-sm {
+    box-shadow: var(--box-shadow);
+}
+
+.shadow-lg {
+    box-shadow: var(--box-shadow-lg);
+}
+
+/* ========== LOADING SPINNER ========== */
+.spinner-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+
+/* ========== PAGINACIÓN ========== */
+.pagination .page-item.active .page-link {
+    background-color: var(--primary);
+    border-color: var(--primary);
+}
+
+.pagination .page-link {
+    color: var(--primary);
+    border-radius: 0.25rem;
+    margin: 0 0.125rem;
+}
+
+/* ========== TOOLTIPS Y POPOVERS (opcional) ========== */
+.tooltip-inner {
+    background-color: var(--secondary);
+    font-size: 0.75rem;
+}
+
+/* ========== RESPONSIVE ADICIONES ========== */
+@media (max-width: 768px) {
+    .card-header {
+        padding: 0.75rem 1rem;
+    }
+    
+    .modal-body {
+        padding: 1rem;
+    }
+    
+    .filter-bar .btn {
+        width: 100%;
+        margin-top: 0.5rem;
+    }
+}

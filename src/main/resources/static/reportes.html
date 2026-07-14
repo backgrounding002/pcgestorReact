@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PCGestor - Reportes</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://use.fontawesome.com/releases/v6.3.0/css/all.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link href="css/styles.css" rel="stylesheet">
+    <link href="css/components.css" rel="stylesheet">
+    <link href="css/responsive.css" rel="stylesheet">
+</head>
+<body class="sb-nav-fixed">
+    <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="dashboard.html">PCGestor</a>
+            <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="ms-auto">
+                <span class="text-white me-3" id="userName">Usuario</span>
+                <span class="badge bg-primary" id="userRol"></span>
+                <button class="btn btn-outline-light btn-sm ms-3" id="btnLogout">
+                    <i class="fas fa-sign-out-alt"></i> Salir
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div id="layoutSidenav">
+        <div id="layoutSidenav_nav">
+            <nav class="sb-sidenav accordion sb-sidenav-dark">
+                <div class="sb-sidenav-menu">
+                    <div class="nav">
+                        <div class="sb-sidenav-menu-heading">Módulos</div>
+                        <a class="nav-link" href="dashboard.html">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                        <a class="nav-link" href="equipos.html">
+                            <i class="fas fa-laptop"></i> Equipos
+                        </a>
+                        <a class="nav-link" href="asignaciones.html">
+                            <i class="fas fa-exchange-alt"></i> Asignaciones
+                        </a>
+                        <a class="nav-link" href="mantenimientos.html">
+                            <i class="fas fa-tools"></i> Mantenimientos
+                        </a>
+                        <a class="nav-link" href="usuarios.html">
+                            <i class="fas fa-users"></i> Usuarios
+                        </a>
+                        <a class="nav-link" href="ubicaciones.html">
+                            <i class="fas fa-map-marker-alt"></i> Ubicaciones
+                        </a>
+                        <div class="sb-sidenav-menu-heading">Reportes</div>
+                        <a class="nav-link active" href="reportes.html">
+                            <i class="fas fa-chart-bar"></i> Reportes
+                        </a>
+                    </div>
+                </div>
+                <div class="sb-sidenav-footer">
+                    <small>PCGestor v1.0</small>
+                </div>
+            </nav>
+        </div>
+
+        <div id="layoutSidenav_content">
+            <main>
+                <div class="container-fluid px-4">
+                    <div class="d-flex justify-content-between align-items-center mt-4 mb-4">
+                        <h1><i class="fas fa-chart-bar me-2"></i>Reportes</h1>
+                        <button class="btn btn-success" id="btnExportarExcel">
+                            <i class="fas fa-file-excel"></i> Exportar a Excel
+                        </button>
+                    </div>
+
+                    <!-- Filtros para reportes -->
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Filtros de reporte</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Tipo de reporte</label>
+                                    <select class="form-select" id="tipoReporte">
+                                        <option value="equipos">Equipos por estado</option>
+                                        <option value="asignaciones">Asignaciones</option>
+                                        <option value="mantenimientos">Mantenimientos</option>
+                                        <option value="usuarios">Usuarios activos</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Fecha inicio</label>
+                                    <input type="date" class="form-control" id="fechaInicio">
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Fecha fin</label>
+                                    <input type="date" class="form-control" id="fechaFin">
+                                </div>
+                                <div class="col-md-3 mb-3 d-flex align-items-end">
+                                    <button class="btn btn-primary w-100" id="btnGenerarReporte">
+                                        <i class="fas fa-search"></i> Generar reporte
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tarjetas de resumen -->
+                    <div class="row mb-4" id="tarjetasResumen">
+                        <div class="col-xl-3 col-md-6 mb-3">
+                            <div class="card card-stats bg-primary text-white">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col">
+                                            <div class="text-uppercase small">Total equipos</div>
+                                            <h2 class="mb-0" id="totalEquipos">0</h2>
+                                        </div>
+                                        <div class="col-auto"><i class="fas fa-laptop fa-2x"></i></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-3 col-md-6 mb-3">
+                            <div class="card card-stats bg-success text-white">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col">
+                                            <div class="text-uppercase small">Asignaciones</div>
+                                            <h2 class="mb-0" id="totalAsignaciones">0</h2>
+                                        </div>
+                                        <div class="col-auto"><i class="fas fa-exchange-alt fa-2x"></i></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-3 col-md-6 mb-3">
+                            <div class="card card-stats bg-warning text-white">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col">
+                                            <div class="text-uppercase small">Mantenimientos</div>
+                                            <h2 class="mb-0" id="totalMantenimientos">0</h2>
+                                        </div>
+                                        <div class="col-auto"><i class="fas fa-tools fa-2x"></i></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-3 col-md-6 mb-3">
+                            <div class="card card-stats bg-danger text-white">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col">
+                                            <div class="text-uppercase small">Usuarios activos</div>
+                                            <h2 class="mb-0" id="totalUsuarios">0</h2>
+                                        </div>
+                                        <div class="col-auto"><i class="fas fa-users fa-2x"></i></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tabla de resultados -->
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Resultados del reporte</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="tablaReportes" width="100%">
+                                    <thead>
+                                        <tr id="encabezadoTabla"></tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/reportes.js"></script>
+</body>
+</html>

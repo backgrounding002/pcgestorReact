@@ -1,0 +1,421 @@
+/*==========================================
+   responsive.css - PCGestor
+   Versión: 1.0
+   Responsive design para todos los módulos
+==========================================*/
+
+/* ========== BREAKPOINTS PRINCIPALES ========== */
+/* 1200px - Pantallas grandes de escritorio */
+/* 992px - Tablets horizontales / escritorio pequeño */
+/* 768px - Tablets verticales */
+/* 576px - Teléfonos grandes */
+/* 480px - Teléfonos medianos */
+/* 360px - Teléfonos pequeños */
+
+/* ========== 1200px - Ajustes para pantallas grandes ========== */
+@media (max-width: 1200px) {
+    .container-fluid {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    
+    /* Dashboard cards */
+    .card-stats h1 {
+        font-size: 2rem;
+    }
+    
+    .card-stats i {
+        font-size: 2rem;
+    }
+}
+
+/* ========== 992px - Tablets horizontales y escritorio pequeño ========== */
+@media (max-width: 992px) {
+    /* Layout general */
+    #layoutSidenav_content {
+        padding: 15px;
+    }
+    
+    /* Dashboard cards */
+    .card-stats .card-body {
+        padding: 15px;
+    }
+    
+    .card-stats h1 {
+        font-size: 1.8rem;
+    }
+    
+    .card-stats .text-uppercase {
+        font-size: 0.7rem;
+    }
+    
+    /* Tablas - permitir scroll horizontal */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Botones en tablas */
+    .btn-sm {
+        padding: 4px 8px;
+        font-size: 0.75rem;
+    }
+    
+    /* Modales */
+    .modal-dialog {
+        max-width: 90%;
+        margin: 1rem auto;
+    }
+    
+    /* Formularios */
+    .form-control, .form-select {
+        font-size: 0.9rem;
+    }
+}
+
+/* ========== 768px - Tablets verticales ========== */
+@media (max-width: 768px) {
+    /* Layout general */
+    .sb-topnav {
+        padding: 0 10px;
+    }
+    
+    .navbar-brand {
+        font-size: 1.2rem;
+    }
+    
+    #layoutSidenav_content {
+        padding: 10px;
+    }
+    
+    /* Dashboard */
+    .dashboard-stats {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+    }
+    
+    .card-stats .card-body {
+        padding: 12px;
+    }
+    
+    .card-stats h1 {
+        font-size: 1.5rem;
+    }
+    
+    .card-stats i {
+        font-size: 1.5rem;
+    }
+    
+    /* Tarjetas generales */
+    .card-header {
+        padding: 12px 15px;
+        font-size: 0.95rem;
+    }
+    
+    .card-body {
+        padding: 15px;
+    }
+    
+    /* Tablas - reducir paddings */
+    .table th, .table td {
+        padding: 0.5rem;
+        font-size: 0.85rem;
+    }
+    
+    /* Botones de acción en tablas */
+    .btn-sm {
+        padding: 3px 6px;
+        font-size: 0.7rem;
+    }
+    
+    .btn-sm i {
+        font-size: 0.7rem;
+    }
+    
+    /* Modales */
+    .modal-body {
+        padding: 15px;
+    }
+    
+    .modal-header {
+        padding: 12px 15px;
+    }
+    
+    .modal-title {
+        font-size: 1.1rem;
+    }
+    
+    /* Formularios */
+    .form-label {
+        font-size: 0.85rem;
+        margin-bottom: 5px;
+    }
+    
+    /* Filtros (usuarios, equipos, etc.) */
+    .card-body .row .mb-3 {
+        margin-bottom: 10px !important;
+    }
+    
+    /* Login */
+    .login-card {
+        padding: 25px;
+        max-width: 350px;
+    }
+    
+    .login-header i {
+        font-size: 45px;
+    }
+    
+    .login-header h2 {
+        font-size: 1.5rem;
+    }
+    
+    .btn-login {
+        padding: 10px;
+        font-size: 14px;
+    }
+}
+
+/* ========== 576px - Teléfonos grandes (iPhone SE, etc.) ========== */
+@media (max-width: 576px) {
+    /* Layout */
+    #layoutSidenav_content {
+        padding: 8px;
+    }
+    
+    /* Dashboard cards - apilar verticalmente */
+    .row > [class*="col-"] {
+        margin-bottom: 12px;
+    }
+    
+    .card-stats h1 {
+        font-size: 1.3rem;
+    }
+    
+    .card-stats .text-uppercase {
+        font-size: 0.65rem;
+    }
+    
+    /* Tablas - ocultar columnas no esenciales (se puede personalizar) */
+    .table th, .table td {
+        white-space: nowrap;
+    }
+    
+    /* Botones flotantes o agrupados */
+    .d-flex.justify-content-between {
+        flex-direction: column;
+        gap: 10px;
+        align-items: stretch !important;
+    }
+    
+    .d-flex.justify-content-between h1 {
+        font-size: 1.3rem;
+        margin-bottom: 10px;
+        text-align: center;
+    }
+    
+    .d-flex.justify-content-between .btn {
+        width: 100%;
+    }
+    
+    /* Botones de exportar y agregar en usuarios */
+    .d-flex.justify-content-between div {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+    }
+    
+    /* Modales */
+    .modal-dialog {
+        max-width: 95%;
+        margin: 0.5rem auto;
+    }
+    
+    .modal-footer {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .modal-footer .btn {
+        width: 100%;
+        margin: 0;
+    }
+    
+    /* Login */
+    .login-card {
+        padding: 20px;
+        margin: 15px;
+    }
+    
+    .login-header p {
+        font-size: 0.8rem;
+    }
+    
+    .login-footer a {
+        font-size: 0.75rem;
+    }
+    
+    /* Gráficos (dashboard) */
+    canvas {
+        height: 250px !important;
+    }
+    
+    /* Sidebar - ajuste de ancho cuando está visible */
+    #layoutSidenav_nav {
+        flex-basis: 200px;
+        transform: translateX(-200px);
+    }
+    
+    .sb-sidenav-dark .sb-sidenav-menu .nav-link {
+        padding: 8px 15px;
+        font-size: 0.85rem;
+    }
+}
+
+/* ========== 480px - Teléfonos medianos ========== */
+@media (max-width: 480px) {
+    /* Dashboard */
+    .card-stats .card-body {
+        padding: 10px;
+    }
+    
+    .card-stats h1 {
+        font-size: 1.1rem;
+    }
+    
+    .card-stats i {
+        font-size: 1.2rem;
+    }
+    
+    .card-stats .text-uppercase {
+        font-size: 0.6rem;
+    }
+    
+    /* Tablas - ocultar columna ID o alguna si es necesario */
+    .table th:nth-child(1), .table td:nth-child(1) {
+        display: none; /* Oculta ID en pantallas muy pequeñas */
+    }
+    
+    /* Botones */
+    .btn-sm {
+        padding: 2px 5px;
+        font-size: 0.65rem;
+    }
+    
+    /* Login */
+    .login-card {
+        padding: 15px;
+    }
+    
+    .login-header i {
+        font-size: 35px;
+    }
+    
+    .login-header h2 {
+        font-size: 1.2rem;
+    }
+    
+    /* Sidebar */
+    .sb-sidenav-footer {
+        font-size: 0.65rem;
+        padding: 10px;
+    }
+}
+
+/* ========== 360px - Teléfonos pequeños (iPhone 5/SE) ========== */
+@media (max-width: 360px) {
+    /* Dashboard */
+    .card-stats h1 {
+        font-size: 1rem;
+    }
+    
+    .card-stats i {
+        display: none; /* Oculta íconos en pantallas muy pequeñas para ahorrar espacio */
+    }
+    
+    /* Tablas */
+    .btn-sm {
+        padding: 2px 4px;
+        font-size: 0.6rem;
+    }
+    
+    /* Login */
+    .login-footer {
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .login-footer .separator {
+        display: none;
+    }
+    
+    .login-footer a {
+        display: block;
+    }
+}
+
+/* ========== ORIENTACIÓN HORIZONTAL (landscape) en móviles ========== */
+@media (max-width: 768px) and (orientation: landscape) {
+    .sb-nav-fixed {
+        padding-top: 50px;
+    }
+    
+    #layoutSidenav_nav {
+        height: calc(100vh - 50px);
+        top: 50px;
+    }
+    
+    .sb-sidenav {
+        height: calc(100vh - 50px);
+    }
+    
+    .modal-dialog {
+        max-width: 80%;
+        margin: 1rem auto;
+    }
+}
+
+/* ========== MEJORAS DE TOUCH (móviles) ========== */
+@media (hover: none) and (pointer: coarse) {
+    .btn, .nav-link, .dropdown-item, .modal .btn {
+        min-height: 44px; /* Tamaño mínimo táctil */
+    }
+    
+    .btn-sm {
+        min-height: 36px;
+    }
+    
+    .table .btn-sm {
+        min-height: 32px;
+    }
+    
+    input, select, textarea {
+        font-size: 16px; /* Previene zoom automático en iOS */
+    }
+}
+
+/* ========== IMPRESIÓN ========== */
+@media print {
+    .sb-topnav, #layoutSidenav_nav, .btn, .modal, footer, #sidebarToggle, #btnLogout {
+        display: none !important;
+    }
+    
+    #layoutSidenav {
+        padding-left: 0 !important;
+    }
+    
+    #layoutSidenav_content {
+        margin: 0;
+        padding: 0;
+    }
+    
+    .card {
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+    
+    .table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+}
