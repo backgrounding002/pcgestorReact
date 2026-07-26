@@ -1,6 +1,8 @@
 package com.pcgestor.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import javax.persistence.*;
+import java.util.List;
 
 @Entity
 @Table(name = "equipos")
@@ -16,16 +18,25 @@ public class Equipo {
     private String estado;
     private String ubicacion;
 
+    @JsonIgnore
+    @OneToMany(mappedBy = "equipo", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Asignacion> asignaciones;
+
     public Equipo() {}
-    // Constructor con todos los campos (opcional)
+
     public Equipo(Long id, String serial, String marca, String modelo, String procesador,
                   String memoriaRAM, String almacenamiento, String estado, String ubicacion) {
-        this.id = id; this.serial = serial; this.marca = marca; this.modelo = modelo;
-        this.procesador = procesador; this.memoriaRAM = memoriaRAM; this.almacenamiento = almacenamiento;
-        this.estado = estado; this.ubicacion = ubicacion;
+        this.id = id; 
+        this.serial = serial; 
+        this.marca = marca; 
+        this.modelo = modelo;
+        this.procesador = procesador; 
+        this.memoriaRAM = memoriaRAM; 
+        this.almacenamiento = almacenamiento;
+        this.estado = estado; 
+        this.ubicacion = ubicacion;
     }
 
-    // Getters y Setters (todos)
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getSerial() { return serial; }
@@ -44,4 +55,7 @@ public class Equipo {
     public void setEstado(String estado) { this.estado = estado; }
     public String getUbicacion() { return ubicacion; }
     public void setUbicacion(String ubicacion) { this.ubicacion = ubicacion; }
+
+    public List<Asignacion> getAsignaciones() { return asignaciones; }
+    public void setAsignaciones(List<Asignacion> asignaciones) { this.asignaciones = asignaciones; }
 }

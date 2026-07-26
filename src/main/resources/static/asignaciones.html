@@ -88,6 +88,7 @@
                                             <th>Equipo</th>
                                             <th>Empleado</th>
                                             <th>Motivo</th>
+                                            <th>Estado</th>
                                             <th>Acciones</th>
                                         </tr>
                                     </thead>
@@ -118,15 +119,23 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Equipo</label>
-                            <select class="form-control" id="equipoId" required></select>
+                            <select class="form-control" id="equipoId" required>
+                                <option value="">Seleccionar equipo</option>
+                            </select>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Empleado</label>
-                            <select class="form-control" id="usuarioId" required></select>
+                            <select class="form-control" id="usuarioId" required>
+                                <option value="">Seleccionar empleado</option>
+                            </select>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Motivo</label>
                             <textarea class="form-control" id="motivo" rows="2"></textarea>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="activa" checked>
+                            <label class="form-check-label" for="activa">Activa</label>
                         </div>
                     </form>
                 </div>
