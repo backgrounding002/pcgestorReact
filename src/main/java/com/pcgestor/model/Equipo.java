@@ -7,54 +7,104 @@ import java.util.List;
 @Entity
 @Table(name = "equipos")
 public class Equipo {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Long id;
+
+    @Column(name = "serial")
     private String serial;
+
+    @Column(name = "marca")
     private String marca;
+
+    @Column(name = "modelo")
     private String modelo;
+
+    @Column(name = "procesador")
     private String procesador;
+
+    @Column(name = "memoriaram")
     private String memoriaRAM;
+
+    @Column(name = "almacenamiento")
     private String almacenamiento;
-    private String estado;
-    private String ubicacion;
+
+    // Relación con TipoEquipo
+    @ManyToOne
+    @JoinColumn(name = "tipo_id", referencedColumnName = "id_tipo")
+    private TipoEquipo tipo;
+
+    @Column(name = "activo")
+    private Boolean activo;
+
+    // Relación con EstadoEquipo
+    @ManyToOne
+    @JoinColumn(name = "estado_id", referencedColumnName = "id_estado")
+    private EstadoEquipo estado;
+
+    // Relación con Ubicacion
+    @ManyToOne
+    @JoinColumn(name = "ubicacion_id", referencedColumnName = "id_ubicacion")
+    private Ubicacion ubicacionEntity;
 
     @JsonIgnore
     @OneToMany(mappedBy = "equipo", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Asignacion> asignaciones;
 
+    // Constructores
     public Equipo() {}
 
     public Equipo(Long id, String serial, String marca, String modelo, String procesador,
-                  String memoriaRAM, String almacenamiento, String estado, String ubicacion) {
-        this.id = id; 
-        this.serial = serial; 
-        this.marca = marca; 
+                  String memoriaRAM, String almacenamiento, TipoEquipo tipo, Boolean activo,
+                  EstadoEquipo estado, Ubicacion ubicacionEntity) {
+        this.id = id;
+        this.serial = serial;
+        this.marca = marca;
         this.modelo = modelo;
-        this.procesador = procesador; 
-        this.memoriaRAM = memoriaRAM; 
+        this.procesador = procesador;
+        this.memoriaRAM = memoriaRAM;
         this.almacenamiento = almacenamiento;
-        this.estado = estado; 
-        this.ubicacion = ubicacion;
+        this.tipo = tipo;
+        this.activo = activo;
+        this.estado = estado;
+        this.ubicacionEntity = ubicacionEntity;
     }
 
+    // Getters y Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+
     public String getSerial() { return serial; }
     public void setSerial(String serial) { this.serial = serial; }
+
     public String getMarca() { return marca; }
     public void setMarca(String marca) { this.marca = marca; }
+
     public String getModelo() { return modelo; }
     public void setModelo(String modelo) { this.modelo = modelo; }
+
     public String getProcesador() { return procesador; }
     public void setProcesador(String procesador) { this.procesador = procesador; }
+
     public String getMemoriaRAM() { return memoriaRAM; }
     public void setMemoriaRAM(String memoriaRAM) { this.memoriaRAM = memoriaRAM; }
+
     public String getAlmacenamiento() { return almacenamiento; }
     public void setAlmacenamiento(String almacenamiento) { this.almacenamiento = almacenamiento; }
-    public String getEstado() { return estado; }
-    public void setEstado(String estado) { this.estado = estado; }
-    public String getUbicacion() { return ubicacion; }
-    public void setUbicacion(String ubicacion) { this.ubicacion = ubicacion; }
+
+    public TipoEquipo getTipo() { return tipo; }
+    public void setTipo(TipoEquipo tipo) { this.tipo = tipo; }
+
+    public Boolean getActivo() { return activo; }
+    public void setActivo(Boolean activo) { this.activo = activo; }
+
+    public EstadoEquipo getEstado() { return estado; }
+    public void setEstado(EstadoEquipo estado) { this.estado = estado; }
+
+    public Ubicacion getUbicacionEntity() { return ubicacionEntity; }
+    public void setUbicacionEntity(Ubicacion ubicacionEntity) { this.ubicacionEntity = ubicacionEntity; }
 
     public List<Asignacion> getAsignaciones() { return asignaciones; }
     public void setAsignaciones(List<Asignacion> asignaciones) { this.asignaciones = asignaciones; }

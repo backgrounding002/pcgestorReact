@@ -1,137 +1,353 @@
-// ubicaciones.js - Gestión de ubicaciones
+// ubicaciones.js - Gestión de ubicaciones con API real
 
 let ubicacionesTable;
-let listaUbicaciones = [
-    { id: 1, nombre: 'Oficina 101', edificio: 'Edificio A', sala: '101', capacidad: 10 },
-    { id: 2, nombre: 'Oficina 102', edificio: 'Edificio A', sala: '102', capacidad: 8 },
-    { id: 3, nombre: 'Bodega principal', edificio: 'Edificio B', sala: '1', capacidad: 20 },
-    { id: 4, nombre: 'Sala de reuniones', edificio: 'Edificio B', sala: '202', capacidad: 15 },
-    { id: 5, nombre: 'Taller de soporte', edificio: 'Edificio C', sala: '303', capacidad: 5 }
-];
 
 $(document).ready(function() {
-    cargarTablaUbicaciones();
+    cargarUbicaciones();
 
-    $('#buscarUbicacion').on('keyup', filtrarTabla);
-    $('#filtroEdificio').on('change', filtrarTabla);
+    $('#buscarUbicacion').on('keyup', function() {
+        filtrarTabla();
+    });
+
+    $('#filtroEdificio').on('change', function() {
+        filtrarTabla();
+    });
+
     $('#btnRecargar').on('click', function() {
-        $('#buscarUbicacion').val('');
-        $('#filtroEdificio').val('todos');
-        cargarTablaUbicaciones();
+        cargarUbicaciones();
     });
 
     $('#modalUbicacion').on('hidden.bs.modal', function() {
         $('#formUbicacion')[0].reset();
         $('#ubicacionId').val('');
-        $('.modal-title').text('Nueva ubicación');
+        $('.modal-title').text('Registrar ubicación');
     });
 });
 
-function cargarTablaUbicaciones() {
-    if (ubicacionesTable) ubicacionesTable.destroy();
-    mostrarUbicaciones(listaUbicaciones);
+async function cargarUbicaciones() {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            showError('No hay sesión activa. Por favor inicie sesión.');
+            window.location.href = 'login.html';
+            return;
+        }
+
+        const response = await fetch('/pcgestor/api/ubicaciones', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                showError('Sesión expirada. Por favor inicie sesión nuevamente.');
+                localStorage.removeItem('token');
+                window.location.href = 'login.html';
+                return;
+            }
+            throw new Error('Error al cargar ubicaciones: ' + response.status);
+        }
+
+        const data = await response.json();
+        console.log('Ubicaciones recibidas:', data);
+        const ubicaciones = Array.isArray(data) ? data : [];
+        mostrarTabla(ubicaciones);
+    } catch (error) {
+        console.error('Error al cargar ubicaciones:', error);
+        showError('Error al cargar las ubicaciones: ' + error.message);
+        mostrarTabla([]);
+    }
 }
 
-function mostrarUbicaciones(ubicaciones) {
+function mostrarTabla(ubicaciones) {
+    if (ubicacionesTable) {
+        try {
+            ubicacionesTable.destroy();
+        } catch (e) {
+            console.warn('Error al destruir DataTable:', e);
+        }
+        ubicacionesTable = null;
+    }
+
     const tbody = $('#tablaUbicaciones tbody');
     tbody.empty();
 
-    ubicaciones.forEach(u => {
+    if (!Array.isArray(ubicaciones) || ubicaciones.length === 0) {
         tbody.append(`
             <tr>
-                <td>${u.id}</td>
-                <td>${u.nombre}</td>
-                <td>${u.edificio}</td>
-                <td>${u.sala}</td>
-                <td>${u.capacidad}</td>
-                <td>
-                    <button class="btn btn-sm btn-warning" onclick="editarUbicacion(${u.id})">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn btn-sm btn-danger" onclick="eliminarUbicacion(${u.id})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
+                <td class="text-center">-</td>
+                <td class="text-center">-</td>
+                <td class="text-center">-</td>
+                <td class="text-center">-</td>
+                <td class="text-center">-</td>
+                <td class="text-center">-</td>
             </tr>
         `);
-    });
+    } else {
+        ubicaciones.forEach(u => {
+            const descripcion = u.descripcion || '-';
+            const idUbicacion = u.idUbicacion || u.id_ubicacion || '-';
+            const edificio = u.edificio || '-';
+            const piso = u.piso || '-';
+            const sala = u.sala || '-';
 
-    if (ubicaciones.length === 0) {
-        tbody.append(`<tr><td colspan="6" class="text-center">No hay ubicaciones registradas</td></tr>`);
+            tbody.append(`
+                <tr>
+                    <td>${idUbicacion}</td>
+                    <td>${edificio}</td>
+                    <td>${piso}</td>
+                    <td>${sala}</td>
+                    <td>${descripcion}</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning" onclick="editarUbicacion(${idUbicacion})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="eliminarUbicacion(${idUbicacion})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `);
+        });
     }
 
-    ubicacionesTable = $('#tablaUbicaciones').DataTable({
-        language: { url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json' },
-        order: [[0, 'desc']],
-        pageLength: 10,
-        destroy: true
-    });
+    setTimeout(function() {
+        try {
+            ubicacionesTable = $('#tablaUbicaciones').DataTable({
+                language: {
+                    "sProcessing": "Procesando...",
+                    "sLengthMenu": "Mostrar _MENU_ registros",
+                    "sZeroRecords": "No se encontraron resultados",
+                    "sEmptyTable": "Ningún dato disponible en esta tabla",
+                    "sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
+                    "sInfoEmpty": "Mostrando registros del 0 al 0 de un total de 0 registros",
+                    "sInfoFiltered": "(filtrado de un total de _MAX_ registros)",
+                    "sInfoPostFix": "",
+                    "sSearch": "Buscar:",
+                    "sUrl": "",
+                    "sInfoThousands": ",",
+                    "sLoadingRecords": "Cargando...",
+                    "oPaginate": {
+                        "sFirst": "Primero",
+                        "sLast": "Último",
+                        "sNext": "Siguiente",
+                        "sPrevious": "Anterior"
+                    },
+                    "oAria": {
+                        "sSortAscending": ": Activar para ordenar la columna de manera ascendente",
+                        "sSortDescending": ": Activar para ordenar la columna de manera descendente"
+                    }
+                },
+                order: [[0, 'desc']],
+                pageLength: 10,
+                destroy: true
+            });
+        } catch (error) {
+            console.error('Error al inicializar DataTable:', error);
+        }
+    }, 100);
 }
 
 function filtrarTabla() {
-    const texto = $('#buscarUbicacion').val().toLowerCase();
-    const edificio = $('#filtroEdificio').val();
+    const textoBusqueda = $('#buscarUbicacion').val().toLowerCase();
+    const filtroEdificio = $('#filtroEdificio').val();
 
-    const filtradas = listaUbicaciones.filter(u => {
-        const coincideTexto = !texto || 
-            u.nombre.toLowerCase().includes(texto) || 
-            u.edificio.toLowerCase().includes(texto) || 
-            u.sala.includes(texto);
-        const coincideEdificio = edificio === 'todos' || u.edificio === edificio;
-        return coincideTexto && coincideEdificio;
-    });
+    if (!ubicacionesTable) return;
 
-    mostrarUbicaciones(filtradas);
+    const data = ubicacionesTable.rows().data();
+    const ubicacionesFiltradas = [];
+
+    for (let i = 0; i < data.length; i++) {
+        const row = data[i];
+        const coincideTexto = !textoBusqueda ||
+            row.edificio?.toLowerCase().includes(textoBusqueda) ||
+            row.piso?.toLowerCase().includes(textoBusqueda) ||
+            row.sala?.toLowerCase().includes(textoBusqueda) ||
+            row.descripcion?.toLowerCase().includes(textoBusqueda);
+        const coincideEdificio = filtroEdificio === 'todos' || row.edificio === filtroEdificio;
+
+        if (coincideTexto && coincideEdificio) {
+            ubicacionesFiltradas.push(row);
+        }
+    }
+
+    mostrarTabla(ubicacionesFiltradas);
 }
 
-function guardarUbicacion() {
+async function guardarUbicacion() {
     const id = $('#ubicacionId').val();
-    const ubicacion = {
-        nombre: $('#nombre').val().trim(),
-        edificio: $('#edificio').val(),
-        sala: $('#sala').val().trim(),
-        capacidad: $('#capacidad').val() || 10
-    };
+    const edificio = $('#edificio').val().trim();
+    const piso = $('#piso').val().trim();
+    const sala = $('#sala').val().trim();
+    const descripcion = $('#descripcion').val().trim();
 
-    if (!ubicacion.nombre || !ubicacion.edificio || !ubicacion.sala) {
-        showError('Por favor complete todos los campos obligatorios');
+    if (!edificio || !piso || !sala) {
+        showError('Los campos Edificio, Piso y Sala son obligatorios');
         return;
     }
 
-    if (id) {
-        const index = listaUbicaciones.findIndex(u => u.id == id);
-        if (index !== -1) {
-            listaUbicaciones[index] = { ...listaUbicaciones[index], ...ubicacion };
-            showSuccess('Ubicación actualizada correctamente');
-        }
-    } else {
-        const nuevoId = listaUbicaciones.length ? Math.max(...listaUbicaciones.map(u => u.id)) + 1 : 6;
-        listaUbicaciones.push({ id: nuevoId, ...ubicacion });
-        showSuccess('Ubicación registrada correctamente');
-    }
+    const ubicacionData = {
+        edificio: edificio,
+        piso: piso,
+        sala: sala,
+        descripcion: descripcion || ''
+    };
+    if (id) ubicacionData.idUbicacion = parseInt(id);
 
-    $('#modalUbicacion').modal('hide');
-    cargarTablaUbicaciones();
+    try {
+        const token = localStorage.getItem('token');
+        const method = id ? 'PUT' : 'POST';
+        const url = id ? `/pcgestor/api/ubicaciones/${id}` : '/pcgestor/api/ubicaciones';
+
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(ubicacionData)
+        });
+
+        if (!response.ok) {
+            const text = await response.text();
+            let errorMsg = 'Error al guardar';
+            try {
+                const error = JSON.parse(text);
+                errorMsg = error.error || error.message || errorMsg;
+            } catch (e) {
+                if (text) errorMsg = text;
+            }
+            throw new Error(errorMsg);
+        }
+
+        showSuccess(id ? 'Ubicación actualizada' : 'Ubicación registrada');
+        $('#modalUbicacion').modal('hide');
+        cargarUbicaciones();
+    } catch (error) {
+        console.error('Error:', error);
+        showError(error.message || 'Error al guardar la ubicación');
+    }
 }
 
 function editarUbicacion(id) {
-    const ubicacion = listaUbicaciones.find(u => u.id == id);
-    if (!ubicacion) return;
+    const row = $(`#tablaUbicaciones tbody tr`).filter(function() {
+        return $(this).find('td:first').text() == id;
+    });
 
-    $('#ubicacionId').val(ubicacion.id);
-    $('#nombre').val(ubicacion.nombre);
-    $('#edificio').val(ubicacion.edificio);
-    $('#sala').val(ubicacion.sala);
-    $('#capacidad').val(ubicacion.capacidad);
-    $('.modal-title').text('Editar ubicación');
-    $('#modalUbicacion').modal('show');
+    if (row.length > 0) {
+        const celdas = row.find('td');
+        const edificio = celdas.eq(1).text().trim();
+        const piso = celdas.eq(2).text().trim();
+        const sala = celdas.eq(3).text().trim();
+        const descripcion = celdas.eq(4).text().trim() === '-' ? '' : celdas.eq(4).text().trim();
+
+        $('#ubicacionId').val(id);
+        $('#edificio').val(edificio);
+        $('#piso').val(piso);
+        $('#sala').val(sala);
+        $('#descripcion').val(descripcion);
+
+        $('.modal-title').text('Editar ubicación');
+        $('#modalUbicacion').modal('show');
+    } else {
+        cargarUbicacionDesdeAPI(id);
+    }
+}
+
+async function cargarUbicacionDesdeAPI(id) {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/pcgestor/api/ubicaciones/${id}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) throw new Error('Error al cargar la ubicación');
+
+        const ubicacion = await response.json();
+
+        $('#ubicacionId').val(ubicacion.idUbicacion || ubicacion.id_ubicacion);
+        $('#edificio').val(ubicacion.edificio || '');
+        $('#piso').val(ubicacion.piso || '');
+        $('#sala').val(ubicacion.sala || '');
+        $('#descripcion').val(ubicacion.descripcion || '');
+
+        $('.modal-title').text('Editar ubicación');
+        $('#modalUbicacion').modal('show');
+    } catch (error) {
+        console.error('Error:', error);
+        showError('No se pudo cargar la ubicación para editar');
+    }
 }
 
 function eliminarUbicacion(id) {
-    const ubicacion = listaUbicaciones.find(u => u.id == id);
-    showConfirm(`¿Está seguro de eliminar la ubicación "${ubicacion.nombre}"?`, () => {
-        listaUbicaciones = listaUbicaciones.filter(u => u.id != id);
-        showSuccess('Ubicación eliminada correctamente');
-        cargarTablaUbicaciones();
+    showConfirm('¿Está seguro de eliminar esta ubicación?', async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`/pcgestor/api/ubicaciones/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (!response.ok) {
+                const text = await response.text();
+                let errorMsg = 'Error al eliminar';
+                try {
+                    const error = JSON.parse(text);
+                    errorMsg = error.error || error.message || errorMsg;
+                } catch (e) {
+                    if (text) errorMsg = text;
+                }
+                throw new Error(errorMsg);
+            }
+
+            showSuccess('Ubicación eliminada correctamente');
+            cargarUbicaciones();
+        } catch (error) {
+            console.error('Error al eliminar ubicación:', error);
+            showError(error.message || 'Error al eliminar la ubicación');
+        }
+    });
+}
+
+// Funciones auxiliares (deben existir en main.js)
+function showSuccess(message) {
+    Swal.fire({
+        icon: 'success',
+        title: 'Éxito',
+        text: message,
+        timer: 2000,
+        showConfirmButton: false
+    });
+}
+
+function showError(message) {
+    Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: message
+    });
+}
+
+function showWarning(message) {
+    Swal.fire({
+        icon: 'warning',
+        title: 'Advertencia',
+        text: message
+    });
+}
+
+function showConfirm(message, callback) {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: message,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed && callback) {
+            callback();
+        }
     });
 }

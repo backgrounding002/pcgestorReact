@@ -12,10 +12,58 @@
     <link href="css/responsive.css" rel="stylesheet">
 </head>
 <body class="sb-nav-fixed">
-    <!-- Navbar y sidebar igual que en index.html (copiar la misma estructura) -->
-    <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark fixed-top">...</nav>
+    <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="index.html">PCGestor</a>
+            <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="ms-auto">
+                <span class="text-white me-3" id="userName">Usuario</span>
+                <span class="badge bg-primary" id="userRol"></span>
+                <button class="btn btn-outline-light btn-sm ms-3" id="btnLogout">
+                    <i class="fas fa-sign-out-alt"></i> Salir
+                </button>
+            </div>
+        </div>
+    </nav>
+
     <div id="layoutSidenav">
-        <div id="layoutSidenav_nav">...</div>
+        <div id="layoutSidenav_nav">
+            <nav class="sb-sidenav accordion sb-sidenav-dark">
+                <div class="sb-sidenav-menu">
+                    <div class="nav">
+                        <div class="sb-sidenav-menu-heading">Módulos</div>
+                        <a class="nav-link" href="index.html">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                        <a class="nav-link active" href="equipos.html">
+                            <i class="fas fa-laptop"></i> Equipos
+                        </a>
+                        <a class="nav-link" href="asignaciones.html">
+                            <i class="fas fa-exchange-alt"></i> Asignaciones
+                        </a>
+                        <a class="nav-link" href="mantenimientos.html">
+                            <i class="fas fa-tools"></i> Mantenimientos
+                        </a>
+                        <a class="nav-link" href="usuarios.html">
+                            <i class="fas fa-users"></i> Usuarios
+                        </a>
+                        <a class="nav-link" href="ubicaciones.html">
+                            <i class="fas fa-map-marker-alt"></i> Ubicaciones
+                        </a>
+                        <div class="sb-sidenav-menu-heading">Reportes</div>
+                        <a class="nav-link" href="reportes.html">
+                            <i class="fas fa-chart-bar"></i> Reportes
+                        </a>
+                    </div>
+                </div>
+                <div class="sb-sidenav-footer">
+                    <small>PCGestor v1.0</small>
+                </div>
+            </nav>
+        </div>
+
         <div id="layoutSidenav_content">
             <main>
                 <div class="container-fluid px-4">
@@ -25,13 +73,22 @@
                             <i class="fas fa-plus"></i> Agregar Equipo
                         </button>
                     </div>
+
                     <div class="card shadow">
                         <div class="card-header">Listado de equipos</div>
                         <div class="card-body">
                             <div class="table-responsive">
                                 <table class="table table-bordered" id="tablaEquipos" width="100%">
                                     <thead>
-                                        <tr><th>ID</th><th>Marca</th><th>Modelo</th><th>Serial</th><th>Estado</th><th>Ubicación</th><th>Acciones</th></tr>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Marca</th>
+                                            <th>Modelo</th>
+                                            <th>Serial</th>
+                                            <th>Estado</th>
+                                            <th>Ubicación</th>
+                                            <th>Acciones</th>
+                                        </tr>
                                     </thead>
                                     <tbody></tbody>
                                 </table>
@@ -54,15 +111,59 @@
                 <div class="modal-body">
                     <form id="formEquipo">
                         <input type="hidden" id="equipoId">
-                        <div class="mb-3"><label>Marca</label><input type="text" class="form-control" id="marca" required></div>
-                        <div class="mb-3"><label>Modelo</label><input type="text" class="form-control" id="modelo" required></div>
-                        <div class="mb-3"><label>Serial</label><input type="text" class="form-control" id="serial" required></div>
-                        <div class="mb-3"><label>Estado</label>
-                            <select class="form-control" id="estado">
-                                <option>Activo</option><option>En mantenimiento</option><option>Dado de baja</option>
+
+                        <div class="mb-3">
+                            <label class="form-label">Marca *</label>
+                            <input type="text" class="form-control" id="marca" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Modelo *</label>
+                            <input type="text" class="form-control" id="modelo" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Serial *</label>
+                            <input type="text" class="form-control" id="serial" required>
+                            <small class="text-muted">El serial debe ser único. No se permiten duplicados.</small>
+                        </div>
+
+                        <!-- NUEVOS CAMPOS: Procesador, Memoria RAM, Almacenamiento -->
+                        <div class="mb-3">
+                            <label class="form-label">Procesador</label>
+                            <input type="text" class="form-control" id="procesador" placeholder="Ej: Intel Core i5-1135G7">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Memoria RAM</label>
+                            <input type="text" class="form-control" id="memoriaRAM" placeholder="Ej: 8GB DDR4">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Almacenamiento</label>
+                            <input type="text" class="form-control" id="almacenamiento" placeholder="Ej: 256GB SSD">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Estado *</label>
+                            <select class="form-control" id="estadoId" required>
+                                <option value="">Seleccionar estado</option>
                             </select>
                         </div>
-                        <div class="mb-3"><label>Ubicación</label><input type="text" class="form-control" id="ubicacion"></div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Ubicación *</label>
+                            <select class="form-control" id="ubicacionId" required>
+                                <option value="">Seleccionar ubicación</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Tipo de equipo *</label>
+                            <select class="form-control" id="tipoId" required>
+                                <option value="">Seleccionar tipo</option>
+                            </select>
+                        </div>
                     </form>
                 </div>
                 <div class="modal-footer">

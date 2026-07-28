@@ -8,78 +8,97 @@ public class EquipoDTO {
     private String procesador;
     private String memoriaRAM;
     private String almacenamiento;
-    private String estado;
-    private String ubicacion;
-    
+    private Long tipoId;
+    private Boolean activo;
+    private Long estadoId;
+    private Long ubicacionId;
+
+    // Getters y Setters
     public Long getId() {
         return id;
     }
-    
+
     public void setId(Long id) {
         this.id = id;
     }
-    
+
     public String getSerial() {
         return serial;
     }
-    
+
     public void setSerial(String serial) {
         this.serial = serial;
     }
-    
+
     public String getMarca() {
         return marca;
     }
-    
+
     public void setMarca(String marca) {
         this.marca = marca;
     }
-    
+
     public String getModelo() {
         return modelo;
     }
-    
+
     public void setModelo(String modelo) {
         this.modelo = modelo;
     }
-    
+
     public String getProcesador() {
         return procesador;
     }
-    
+
     public void setProcesador(String procesador) {
         this.procesador = procesador;
     }
-    
+
     public String getMemoriaRAM() {
         return memoriaRAM;
     }
-    
+
     public void setMemoriaRAM(String memoriaRAM) {
         this.memoriaRAM = memoriaRAM;
     }
-    
+
     public String getAlmacenamiento() {
         return almacenamiento;
     }
-    
+
     public void setAlmacenamiento(String almacenamiento) {
         this.almacenamiento = almacenamiento;
     }
-    
-    public String getEstado() {
-        return estado;
+
+    public Long getTipoId() {
+        return tipoId;
     }
-    
-    public void setEstado(String estado) {
-        this.estado = estado;
+
+    public void setTipoId(Long tipoId) {
+        this.tipoId = tipoId;
     }
-    
-    public String getUbicacion() {
-        return ubicacion;
+
+    public Boolean getActivo() {
+        return activo;
     }
-    
-    public void setUbicacion(String ubicacion) {
-        this.ubicacion = ubicacion;
+
+    public void setActivo(Boolean activo) {
+        this.activo = activo;
+    }
+
+    public Long getEstadoId() {
+        return estadoId;
+    }
+
+    public void setEstadoId(Long estadoId) {
+        this.estadoId = estadoId;
+    }
+
+    public Long getUbicacionId() {
+        return ubicacionId;
+    }
+
+    public void setUbicacionId(Long ubicacionId) {
+        this.ubicacionId = ubicacionId;
     }
 }

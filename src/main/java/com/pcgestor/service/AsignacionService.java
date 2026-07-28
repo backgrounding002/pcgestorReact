@@ -130,11 +130,15 @@ public class AsignacionService {
             equipoDTO.setMarca(equipo.getMarca());
             equipoDTO.setModelo(equipo.getModelo());
             equipoDTO.setProcesador(equipo.getProcesador());
-            // CORREGIDO: getMemoriaRAM() en lugar de getMemoriaram()
             equipoDTO.setMemoriaRAM(equipo.getMemoriaRAM());
             equipoDTO.setAlmacenamiento(equipo.getAlmacenamiento());
-            equipoDTO.setEstado(equipo.getEstado());
-            equipoDTO.setUbicacion(equipo.getUbicacion());
+            // Asignar IDs de las relaciones (ya que EquipoDTO ahora usa IDs)
+            if (equipo.getEstado() != null) {
+                equipoDTO.setEstadoId(equipo.getEstado().getId());
+            }
+            if (equipo.getUbicacionEntity() != null) {
+                equipoDTO.setUbicacionId(equipo.getUbicacionEntity().getIdUbicacion());
+            }
             dto.setEquipo(equipoDTO);
         });
         
