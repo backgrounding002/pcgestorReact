@@ -24,9 +24,25 @@ document.addEventListener('DOMContentLoaded', function() {
         const password = document.getElementById('password').value;
 
         if (!username || !password) {
-            Swal.fire('Campos incompletos', 'Por favor ingrese usuario y contraseña', 'warning');
+            Swal.fire({
+                icon: 'warning',
+                title: 'Campos incompletos',
+                text: 'Por favor ingrese usuario y contraseña',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'Entendido'
+            });
             return;
         }
+
+        // Mostrar loading
+        Swal.fire({
+            title: 'Iniciando sesión...',
+            text: 'Por favor espere',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
 
         try {
             const response = await fetch('/pcgestor/api/auth/login', {
@@ -35,18 +51,122 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: JSON.stringify({ username, password })
             });
 
-            const data = await response.json();
+            // Verificar si la respuesta tiene contenido JSON
+            const contentType = response.headers.get('content-type');
+            const isJson = contentType && contentType.includes('application/json');
 
-            if (response.ok && data.token) {
+            let data = null;
+
+            if (isJson) {
+                try {
+                    data = await response.json();
+                } catch (parseError) {
+                    console.error('Error al parsear JSON:', parseError);
+                    Swal.close();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error del servidor',
+                        text: 'El servidor devolvió una respuesta inválida. Por favor intente más tarde.',
+                        confirmButtonColor: '#d33',
+                        confirmButtonText: 'Reintentar'
+                    });
+                    return;
+                }
+            } else {
+                // Si no es JSON, leer como texto para depuración
+                const text = await response.text();
+                console.error('Respuesta no JSON:', text);
+                Swal.close();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error de formato',
+                    text: 'El servidor devolvió una respuesta inesperada. Contacte al administrador.',
+                    confirmButtonColor: '#d33',
+                    confirmButtonText: 'Reintentar'
+                });
+                return;
+            }
+
+            // Cerrar loading
+            Swal.close();
+
+            if (response.ok && data && data.token) {
+                // Guardar datos en localStorage
                 localStorage.setItem('token', data.token);
-                localStorage.setItem('user', JSON.stringify({ nombre: username, rol: 'Administrador' }));
+                localStorage.setItem('user', JSON.stringify({ 
+                    nombre: username, 
+                    rol: data.rol || 'Administrador' 
+                }));
+
+                // Mensaje de éxito
+                await Swal.fire({
+                    icon: 'success',
+                    title: '¡Bienvenido!',
+                    text: `Inicio de sesión exitoso. Redirigiendo al dashboard...`,
+                    timer: 2000,
+                    timerProgressBar: true,
+                    showConfirmButton: false
+                });
+
+                // Redirigir después del mensaje
                 window.location.href = 'index.html';
             } else {
-                Swal.fire('Error', data.message || 'Credenciales incorrectas', 'error');
+                // Credenciales incorrectas u otro error
+                let mensajeError = 'Credenciales incorrectas. Por favor verifique su usuario y contraseña.';
+                
+                if (data && data.message) {
+                    const msg = data.message.toLowerCase();
+                    if (msg.includes('usuario') || msg.includes('user')) {
+                        mensajeError = 'El usuario ingresado no existe.';
+                    } else if (msg.includes('contraseña') || msg.includes('password')) {
+                        mensajeError = 'La contraseña ingresada es incorrecta.';
+                    } else {
+                        mensajeError = data.message;
+                    }
+                } else if (data && data.error) {
+                    mensajeError = data.error;
+                } else if (response.status === 401) {
+                    mensajeError = 'Credenciales incorrectas. Por favor verifique su usuario y contraseña.';
+                } else if (response.status === 404) {
+                    mensajeError = 'El usuario no existe. Por favor regístrese.';
+                } else if (response.status === 403) {
+                    mensajeError = 'No tiene permisos para acceder al sistema.';
+                } else if (response.status === 500) {
+                    mensajeError = 'Error interno del servidor. Por favor intente más tarde.';
+                }
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error de autenticación',
+                    text: mensajeError,
+                    confirmButtonColor: '#d33',
+                    confirmButtonText: 'Intentar de nuevo'
+                });
             }
         } catch (error) {
+            // Cerrar loading
+            Swal.close();
+
             console.error('Error de conexión:', error);
-            Swal.fire('Error de conexión', 'No se pudo conectar con el servidor', 'error');
+            
+            let mensajeError = 'No se pudo conectar con el servidor. Verifique su conexión a internet.';
+            if (error.message) {
+                if (error.message.includes('Failed to fetch')) {
+                    mensajeError = 'No se pudo conectar con el servidor. Verifique que el servidor esté corriendo y sea accesible.';
+                } else if (error.message.includes('Unexpected end of JSON input')) {
+                    mensajeError = 'El servidor devolvió una respuesta incompleta. Por favor intente más tarde.';
+                } else {
+                    mensajeError = error.message;
+                }
+            }
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de conexión',
+                text: mensajeError,
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'Reintentar'
+            });
         }
     });
 
@@ -57,14 +177,24 @@ document.addEventListener('DOMContentLoaded', function() {
     if (btnRegistro) {
         btnRegistro.addEventListener('click', (e) => {
             e.preventDefault();
-            Swal.fire('Registro', 'Funcionalidad en desarrollo', 'info');
+            Swal.fire({
+                icon: 'info',
+                title: 'Registro',
+                text: 'Funcionalidad en desarrollo',
+                confirmButtonText: 'Entendido'
+            });
         });
     }
 
     if (btnRecuperar) {
         btnRecuperar.addEventListener('click', (e) => {
             e.preventDefault();
-            Swal.fire('Recuperar contraseña', 'Funcionalidad en desarrollo', 'info');
+            Swal.fire({
+                icon: 'info',
+                title: 'Recuperar contraseña',
+                text: 'Funcionalidad en desarrollo',
+                confirmButtonText: 'Entendido'
+            });
         });
     }
 });
