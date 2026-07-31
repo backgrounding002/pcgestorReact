@@ -5,6 +5,10 @@ import javax.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+/**
+ * Entidad que representa una asignación de un equipo a un usuario.
+ * Contiene información de la asignación, fechas y estado (activa/inactiva).
+ */
 @Entity
 @Table(name = "asignaciones")
 public class Asignacion {
@@ -32,16 +36,19 @@ public class Asignacion {
     @Column(name = "fecha_creacion")
     private LocalDateTime fechaCreacion;
     
+    // Relación con Equipo (solo para consultas, no se usa para inserción/actualización)
     @JsonIgnore
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "equipo_id", insertable = false, updatable = false)
     private Equipo equipo;
     
+    // Relación con Usuario (solo para consultas, no se usa para inserción/actualización)
     @JsonIgnore
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "usuario_id", insertable = false, updatable = false)
     private Usuario usuario;
     
+    // Constructores
     public Asignacion() {}
     
     public Asignacion(Long idAsignacion, LocalDate fechaAsignacion, String motivo, 
@@ -54,6 +61,7 @@ public class Asignacion {
         this.activa = activa;
     }
     
+    // Getters y Setters
     public Long getIdAsignacion() {
         return idAsignacion;
     }

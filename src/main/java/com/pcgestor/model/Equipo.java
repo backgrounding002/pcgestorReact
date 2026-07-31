@@ -1,6 +1,9 @@
 package com.pcgestor.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
+
 import javax.persistence.*;
 import java.util.List;
 
@@ -31,22 +34,25 @@ public class Equipo {
     @Column(name = "almacenamiento")
     private String almacenamiento;
 
-    // Relación con TipoEquipo
-    @ManyToOne
+    // Relación con TipoEquipo (cargada de forma perezosa, ignora si no existe)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tipo_id", referencedColumnName = "id_tipo")
+    @NotFound(action = NotFoundAction.IGNORE)
     private TipoEquipo tipo;
 
     @Column(name = "activo")
     private Boolean activo;
 
-    // Relación con EstadoEquipo
-    @ManyToOne
+    // Relación con EstadoEquipo (cargada de forma perezosa, ignora si no existe)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "estado_id", referencedColumnName = "id_estado")
+    @NotFound(action = NotFoundAction.IGNORE)
     private EstadoEquipo estado;
 
-    // Relación con Ubicacion
-    @ManyToOne
+    // Relación con Ubicacion (cargada de forma perezosa, ignora si no existe)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ubicacion_id", referencedColumnName = "id_ubicacion")
+    @NotFound(action = NotFoundAction.IGNORE)
     private Ubicacion ubicacionEntity;
 
     @JsonIgnore

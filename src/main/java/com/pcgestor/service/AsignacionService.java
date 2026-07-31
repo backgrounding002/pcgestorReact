@@ -30,6 +30,10 @@ public class AsignacionService {
     @Autowired
     private UsuarioRepository usuarioRepository;
     
+    /**
+     * Obtiene todas las asignaciones.
+     * @return Lista de asignaciones
+     */
     public List<AsignacionResponseDTO> obtenerTodas() {
         List<Asignacion> asignaciones = asignacionRepository.findAll();
         return asignaciones.stream()
@@ -37,12 +41,58 @@ public class AsignacionService {
                 .collect(Collectors.toList());
     }
     
+    /**
+     * Obtiene una asignación por su ID.
+     * @param id ID de la asignación
+     * @return Asignación encontrada
+     * @throws RuntimeException si no existe
+     */
     public AsignacionResponseDTO obtenerPorId(Long id) {
         Asignacion asignacion = asignacionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Asignación no encontrada con ID: " + id));
         return convertirAResponseDTO(asignacion);
     }
     
+    /**
+     * Obtiene todas las asignaciones de un usuario específico.
+     * @param usuarioId ID del usuario
+     * @return Lista de asignaciones del usuario
+     * @throws RuntimeException si el usuario no existe
+     */
+    public List<AsignacionResponseDTO> obtenerPorUsuario(Long usuarioId) {
+        // Verificar que el usuario existe
+        if (!usuarioRepository.existsById(usuarioId)) {
+            throw new RuntimeException("Usuario no encontrado con ID: " + usuarioId);
+        }
+        List<Asignacion> asignaciones = asignacionRepository.findByUsuarioId(usuarioId);
+        return asignaciones.stream()
+                .map(this::convertirAResponseDTO)
+                .collect(Collectors.toList());
+    }
+    
+    /**
+     * Obtiene todas las asignaciones de un equipo específico.
+     * @param equipoId ID del equipo
+     * @return Lista de asignaciones del equipo
+     * @throws RuntimeException si el equipo no existe
+     */
+    public List<AsignacionResponseDTO> obtenerPorEquipo(Long equipoId) {
+        // Verificar que el equipo existe
+        if (!equipoRepository.existsById(equipoId)) {
+            throw new RuntimeException("Equipo no encontrado con ID: " + equipoId);
+        }
+        List<Asignacion> asignaciones = asignacionRepository.findByEquipoId(equipoId);
+        return asignaciones.stream()
+                .map(this::convertirAResponseDTO)
+                .collect(Collectors.toList());
+    }
+    
+    /**
+     * Crea una nueva asignación.
+     * @param dto Datos de la asignación
+     * @return Asignación creada
+     * @throws RuntimeException si el equipo o usuario no existen, o si el equipo ya tiene asignación activa
+     */
     @Transactional
     public AsignacionResponseDTO crear(AsignacionDTO dto) {
         Equipo equipo = equipoRepository.findById(dto.getEquipoId())
@@ -68,6 +118,13 @@ public class AsignacionService {
         return convertirAResponseDTO(saved);
     }
     
+    /**
+     * Actualiza una asignación existente.
+     * @param id ID de la asignación
+     * @param dto Datos actualizados
+     * @return Asignación actualizada
+     * @throws RuntimeException si no existe o si el nuevo equipo ya tiene asignación activa
+     */
     @Transactional
     public AsignacionResponseDTO actualizar(Long id, AsignacionDTO dto) {
         Asignacion asignacion = asignacionRepository.findById(id)
@@ -98,6 +155,11 @@ public class AsignacionService {
         return convertirAResponseDTO(updated);
     }
     
+    /**
+     * Elimina una asignación por su ID.
+     * @param id ID de la asignación
+     * @throws RuntimeException si no existe
+     */
     @Transactional
     public void eliminar(Long id) {
         Asignacion asignacion = asignacionRepository.findById(id)
@@ -105,6 +167,12 @@ public class AsignacionService {
         asignacionRepository.delete(asignacion);
     }
     
+    /**
+     * Cambia el estado (activa/inactiva) de una asignación.
+     * @param id ID de la asignación
+     * @param activa Nuevo estado (true/false)
+     * @throws RuntimeException si no existe
+     */
     @Transactional
     public void cambiarEstado(Long id, Boolean activa) {
         Asignacion asignacion = asignacionRepository.findById(id)
@@ -113,6 +181,11 @@ public class AsignacionService {
         asignacionRepository.save(asignacion);
     }
     
+    /**
+     * Convierte una entidad Asignacion a su DTO de respuesta.
+     * @param asignacion Entidad Asignacion
+     * @return DTO con datos completos incluyendo equipo y usuario
+     */
     private AsignacionResponseDTO convertirAResponseDTO(Asignacion asignacion) {
         AsignacionResponseDTO dto = new AsignacionResponseDTO(
                 asignacion.getIdAsignacion(),
@@ -132,12 +205,15 @@ public class AsignacionService {
             equipoDTO.setProcesador(equipo.getProcesador());
             equipoDTO.setMemoriaRAM(equipo.getMemoriaRAM());
             equipoDTO.setAlmacenamiento(equipo.getAlmacenamiento());
-            // Asignar IDs de las relaciones (ya que EquipoDTO ahora usa IDs)
+            // Asignar IDs de las relaciones
             if (equipo.getEstado() != null) {
                 equipoDTO.setEstadoId(equipo.getEstado().getId());
             }
             if (equipo.getUbicacionEntity() != null) {
                 equipoDTO.setUbicacionId(equipo.getUbicacionEntity().getIdUbicacion());
+            }
+            if (equipo.getTipo() != null) {
+                equipoDTO.setTipoId(equipo.getTipo().getId());
             }
             dto.setEquipo(equipoDTO);
         });
