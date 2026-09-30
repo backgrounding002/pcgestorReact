@@ -1,30 +1,23 @@
 // ============================================
 // api.js - Comunicación con el backend Spring Boot
+// Sin datos simulados: si el backend falla, el error se propaga
 // ============================================
 
-// Configuración base
-const API_BASE_URL = 'http://localhost:8086/pcgestor/api';  
+const API_BASE_URL = 'http://localhost:8086/pcgestor/api';
 
-// ============================================
-// Clase principal API
-// ============================================
 class API {
     constructor() {
         this.token = localStorage.getItem('token');
     }
 
-    // Obtener headers con autenticación
     getHeaders() {
-        const headers = {
-            'Content-Type': 'application/json'
-        };
+        const headers = { 'Content-Type': 'application/json' };
         if (this.token) {
             headers['Authorization'] = `Bearer ${this.token}`;
         }
         return headers;
     }
 
-    // Método genérico para peticiones fetch
     async request(endpoint, method = 'GET', data = null) {
         const config = {
             method: method,
@@ -32,30 +25,33 @@ class API {
         };
         if (data) config.body = JSON.stringify(data);
 
-        try {
-            const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
-            
-            // Si el token expiró o es inválido, redirigir al login
-            if (response.status === 401) {
-                this.logout();
-                throw new Error('Sesión expirada');
-            }
-            
-            // Para respuestas sin contenido (ej. DELETE)
-            if (response.status === 204) return null;
-            
-            const result = await response.json();
-            if (!response.ok) throw new Error(result.message || result.error || 'Error en la petición');
-            return result;
-        } catch (error) {
-            console.error(`API Error [${endpoint}]:`, error);
-            throw error;
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+
+        if (response.status === 401) {
+            this.logout();
+            throw new Error('Sesión expirada');
         }
+
+        if (response.status === 403) {
+            throw new Error('No tienes permisos para esta operación');
+        }
+
+        if (response.status === 204) return null;
+
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+            if (!response.ok) throw new Error('Error ' + response.status);
+            return null;
+        }
+
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.message || result.error || ('Error ' + response.status));
+        }
+        return result;
     }
 
-    // ============================================
-    // Autenticación
-    // ============================================
+    // ============ Autenticación ============
     async login(username, password) {
         const response = await fetch(`${API_BASE_URL}/auth/login`, {
             method: 'POST',
@@ -63,8 +59,9 @@ class API {
             body: JSON.stringify({ username, password })
         });
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Credenciales incorrectas');
+            let msg = 'Credenciales incorrectas';
+            try { const e = await response.json(); msg = e.message || e.error || msg; } catch (ignored) {}
+            throw new Error(msg);
         }
         const data = await response.json();
         if (data.token) {
@@ -81,228 +78,77 @@ class API {
         window.location.href = 'login.html';
     }
 
-    // ============================================
-    // Equipos
-    // ============================================
-    async getEquipos() {
-        try {
-            return await this.request('/equipos');
-        } catch (error) {
-            console.warn('Usando datos simulados de equipos');
-            return this._getMockEquipos();
-        }
+    // ============ Dashboard ============
+    getDashboardStats() {
+        return this.request('/dashboard/stats');
     }
 
-    async getEquipo(id) {
-        try {
-            return await this.request(`/equipos/${id}`);
-        } catch (error) {
-            const mock = this._getMockEquipos().find(e => e.id == id);
-            return mock || null;
-        }
+    // ============ Reportes ============
+    getReporteEstadisticas() {
+        return this.request('/reportes/estadisticas');
     }
 
-    async createEquipo(equipo) {
-        try {
-            return await this.request('/equipos', 'POST', equipo);
-        } catch (error) {
-            console.warn('Simulando creación de equipo');
-            const nuevo = { id: Date.now(), ...equipo };
-            return nuevo;
-        }
+    // ============ Equipos ============
+    getEquipos()          { return this.request('/equipos'); }
+    getEquipo(id)         { return this.request(`/equipos/${id}`); }
+    createEquipo(e)       { return this.request('/equipos', 'POST', e); }
+    updateEquipo(id, e)   { return this.request(`/equipos/${id}`, 'PUT', e); }
+    deleteEquipo(id)      { return this.request(`/equipos/${id}`, 'DELETE'); }
+
+    // ============ Usuarios ============
+    getUsuarios()         { return this.request('/usuarios'); }
+    getUsuario(id)        { return this.request(`/usuarios/${id}`); }
+    createUsuario(u)      { return this.request('/usuarios', 'POST', u); }
+    updateUsuario(id, u)  { return this.request(`/usuarios/${id}`, 'PUT', u); }
+    deleteUsuario(id)     { return this.request(`/usuarios/${id}`, 'DELETE'); }
+
+    // ============ Asignaciones ============
+    getAsignaciones()            { return this.request('/asignaciones'); }
+    getAsignacion(id)            { return this.request(`/asignaciones/${id}`); }
+    createAsignacion(a)          { return this.request('/asignaciones', 'POST', a); }
+    updateAsignacion(id, a)      { return this.request(`/asignaciones/${id}`, 'PUT', a); }
+    deleteAsignacion(id)         { return this.request(`/asignaciones/${id}`, 'DELETE'); }
+    cambiarEstadoAsignacion(id, activa) {
+        return this.request(`/asignaciones/${id}/estado`, 'PATCH', { activa });
     }
 
-    async updateEquipo(id, equipo) {
-        try {
-            return await this.request(`/equipos/${id}`, 'PUT', equipo);
-        } catch (error) {
-            console.warn('Simulando actualización de equipo');
-            return { id, ...equipo };
-        }
-    }
+    // ============ Mantenimientos ============
+    getMantenimientos()          { return this.request('/mantenimientos'); }
+    getMantenimiento(id)         { return this.request(`/mantenimientos/${id}`); }
+    createMantenimiento(m)       { return this.request('/mantenimientos', 'POST', m); }
+    updateMantenimiento(id, m)   { return this.request(`/mantenimientos/${id}`, 'PUT', m); }
+    deleteMantenimiento(id)      { return this.request(`/mantenimientos/${id}`, 'DELETE'); }
 
-    async deleteEquipo(id) {
-        try {
-            return await this.request(`/equipos/${id}`, 'DELETE');
-        } catch (error) {
-            console.warn('Simulando eliminación de equipo');
-            return true;
-        }
-    }
+    // ============ Ubicaciones ============
+    getUbicaciones()             { return this.request('/ubicaciones'); }
+    createUbicacion(u)           { return this.request('/ubicaciones', 'POST', u); }
+    updateUbicacion(id, u)       { return this.request(`/ubicaciones/${id}`, 'PUT', u); }
+    deleteUbicacion(id)          { return this.request(`/ubicaciones/${id}`, 'DELETE'); }
 
-    // ============================================
-    // Usuarios
-    // ============================================
-    async getUsuarios() {
-        try {
-            return await this.request('/usuarios');
-        } catch (error) {
-            console.warn('Usando datos simulados de usuarios');
-            return this._getMockUsuarios();
-        }
-    }
+    // ============ Catálogos ============
+    getTiposEquipo()             { return this.request('/tipos-equipo'); }
+    getEstadosEquipo()           { return this.request('/estados-equipo'); }
 
-    async getUsuario(id) {
-        try {
-            return await this.request(`/usuarios/${id}`);
-        } catch (error) {
-            return this._getMockUsuarios().find(u => u.id == id) || null;
-        }
-    }
+    // ============ Exportación ============
+    async descargarArchivo(endpoint, nombreArchivo) {
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+            headers: { 'Authorization': `Bearer ${this.token}` }
+        });
 
-    async createUsuario(usuario) {
-        try {
-            return await this.request('/usuarios', 'POST', usuario);
-        } catch (error) {
-            const nuevo = { id: Date.now(), ...usuario };
-            return nuevo;
-        }
-    }
+        if (response.status === 401) { this.logout(); throw new Error('Sesión expirada'); }
+        if (response.status === 403) { throw new Error('No tienes permisos para exportar'); }
+        if (!response.ok) throw new Error('Error al exportar: ' + response.status);
 
-    async updateUsuario(id, usuario) {
-        try {
-            return await this.request(`/usuarios/${id}`, 'PUT', usuario);
-        } catch (error) {
-            return { id, ...usuario };
-        }
-    }
-
-    async deleteUsuario(id) {
-        try {
-            return await this.request(`/usuarios/${id}`, 'DELETE');
-        } catch (error) {
-            return true;
-        }
-    }
-
-    // ============================================
-    // Asignaciones
-    // ============================================
-    async getAsignaciones() {
-        try {
-            return await this.request('/asignaciones');
-        } catch (error) {
-            return this._getMockAsignaciones();
-        }
-    }
-
-    async createAsignacion(asignacion) {
-        try {
-            return await this.request('/asignaciones', 'POST', asignacion);
-        } catch (error) {
-            const nueva = { id: Date.now(), ...asignacion };
-            return nueva;
-        }
-    }
-
-    async updateAsignacion(id, asignacion) {
-        try {
-            return await this.request(`/asignaciones/${id}`, 'PUT', asignacion);
-        } catch (error) {
-            return { id, ...asignacion };
-        }
-    }
-
-    async deleteAsignacion(id) {
-        try {
-            return await this.request(`/asignaciones/${id}`, 'DELETE');
-        } catch (error) {
-            return true;
-        }
-    }
-
-    // ============================================
-    // Mantenimientos
-    // ============================================
-    async getMantenimientos() {
-        try {
-            return await this.request('/mantenimientos');
-        } catch (error) {
-            return this._getMockMantenimientos();
-        }
-    }
-
-    async createMantenimiento(mantenimiento) {
-        try {
-            return await this.request('/mantenimientos', 'POST', mantenimiento);
-        } catch (error) {
-            const nuevo = { id: Date.now(), ...mantenimiento };
-            return nuevo;
-        }
-    }
-
-    // ============================================
-    // Ubicaciones
-    // ============================================
-    async getUbicaciones() {
-        try {
-            return await this.request('/ubicaciones');
-        } catch (error) {
-            return [
-                { id: 1, nombre: 'Oficina 101', edificio: 'Edificio A', sala: '101' },
-                { id: 2, nombre: 'Oficina 102', edificio: 'Edificio A', sala: '102' },
-                { id: 3, nombre: 'Bodega', edificio: 'Edificio B', sala: '1' }
-            ];
-        }
-    }
-
-    // ============================================
-    // Estadísticas (dashboard)
-    // ============================================
-    async getEstadisticas() {
-        try {
-            return await this.request('/estadisticas');
-        } catch (error) {
-            return {
-                totalEquipos: 146,
-                equiposDisponibles: 89,
-                mantenimientosPendientes: 32,
-                totalAsignaciones: 25,
-                equiposPorEstado: [
-                    { estado: 'Activo', cantidad: 120 },
-                    { estado: 'En mantenimiento', cantidad: 18 },
-                    { estado: 'Dado de baja', cantidad: 8 }
-                ]
-            };
-        }
-    }
-
-    // ============================================
-    // Métodos auxiliares con datos simulados (mock)
-    // ============================================
-    _getMockEquipos() {
-        return [
-            { id: 1, marca: 'HP', modelo: 'Pavilion', serial: 'HP001', estado: 'Activo', ubicacion: 'Oficina 101' },
-            { id: 2, marca: 'Dell', modelo: 'Latitude', serial: 'DEL002', estado: 'Activo', ubicacion: 'Oficina 102' },
-            { id: 3, marca: 'Samsung', modelo: 'Monitor', serial: 'SAM003', estado: 'En mantenimiento', ubicacion: 'Bodega' },
-            { id: 4, marca: 'Lenovo', modelo: 'ThinkPad', serial: 'LEN004', estado: 'Activo', ubicacion: 'Oficina 103' }
-        ];
-    }
-
-    _getMockUsuarios() {
-        return [
-            { id: 1, nombre: 'Federico', correo: 'fedro@example.com', telefono: '3001234567', rol: 'Administrador', estado: 'Activo' },
-            { id: 2, nombre: 'Laura', correo: 'laura@example.com', telefono: '3109876543', rol: 'Empleado', estado: 'Activo' },
-            { id: 3, nombre: 'Javier', correo: 'javier@example.com', telefono: '3204567890', rol: 'Técnico', estado: 'Activo' },
-            { id: 4, nombre: 'María', correo: 'maria@example.com', telefono: '3012345678', rol: 'Empleado', estado: 'Activo' }
-        ];
-    }
-
-    _getMockAsignaciones() {
-        return [
-            { id: 1, fecha: '2024-01-01', equipo: 'Laptop HP', usuario: 'Ana Pérez', motivo: 'Desarrollo' },
-            { id: 2, fecha: '2024-02-15', equipo: 'Escritorio Dell', usuario: 'Carlos Gómez', motivo: 'Administración' },
-            { id: 3, fecha: '2024-03-25', equipo: 'Monitor Samsung', usuario: 'Laura Rodríguez', motivo: 'Diseño' }
-        ];
-    }
-
-    _getMockMantenimientos() {
-        return [
-            { id: 1, fecha: '2024-01-10', tipo: 'Preventivo', equipo: 'Laptop HP', costo: 50000, descripcion: 'Limpieza interna' },
-            { id: 2, fecha: '2024-02-20', tipo: 'Correctivo', equipo: 'Escritorio Dell', costo: 120000, descripcion: 'Cambio de fuente' }
-        ];
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = nombreArchivo;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
     }
 }
 
-// Instancia global para usar en todo el frontend
 const api = new API();

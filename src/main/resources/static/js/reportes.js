@@ -1,184 +1,361 @@
-// reportes.js - Lógica del módulo de reportes
+// reportes.js - Módulo de reportes con datos reales del backend
 
-let tablaReportes;
+const API_URL = 'http://localhost:8086/pcgestor/api';
 
-const datosEjemplo = {
-    equipos: [
-        { id: 1, marca: 'HP', modelo: 'Pavilion', serial: 'HP001', estado: 'Activo', ubicacion: 'Oficina 101' },
-        { id: 2, marca: 'Dell', modelo: 'Latitude', serial: 'DEL002', estado: 'Activo', ubicacion: 'Oficina 102' },
-        { id: 3, marca: 'Samsung', modelo: 'Monitor', serial: 'SAM003', estado: 'En mantenimiento', ubicacion: 'Bodega' }
-    ],
-    asignaciones: [
-        { id: 1, fecha: '2024-01-01', equipo: 'Laptop HP', usuario: 'Ana Pérez', motivo: 'Desarrollo' },
-        { id: 2, fecha: '2024-02-15', equipo: 'Escritorio Dell', usuario: 'Carlos Gómez', motivo: 'Administración' }
-    ],
-    mantenimientos: [
-        { id: 1, fecha: '2024-01-10', tipo: 'Preventivo', equipo: 'Laptop HP', costo: 50000 },
-        { id: 2, fecha: '2024-02-20', tipo: 'Correctivo', equipo: 'Escritorio Dell', costo: 120000 }
-    ],
-    usuarios: [
-        { id: 1, nombre: 'Federico', correo: 'fedro@example.com', rol: 'Administrador', estado: 'Activo' },
-        { id: 2, nombre: 'Laura', correo: 'laura@example.com', rol: 'Empleado', estado: 'Activo' }
-    ]
-};
+let tablaReportes = null;
+let tipoActual = 'equipos';
+
+function getToken() {
+    return localStorage.getItem('token');
+}
 
 $(document).ready(function() {
-    cargarResumenes();
+    const token = getToken();
+    if (!token) {
+        window.location.href = 'login.html';
+        return;
+    }
+
+    cargarEstadisticas();
     generarReporte();
 
     $('#btnGenerarReporte').on('click', generarReporte);
     $('#btnExportarExcel').on('click', exportarAExcel);
 });
 
-function cargarResumenes() {
-    $('#totalEquipos').text(datosEjemplo.equipos.length);
-    $('#totalAsignaciones').text(datosEjemplo.asignaciones.length);
-    $('#totalMantenimientos').text(datosEjemplo.mantenimientos.length);
-    $('#totalUsuarios').text(datosEjemplo.usuarios.length);
+// ================================================
+// Tarjetas superiores con contadores reales
+// ================================================
+async function cargarEstadisticas() {
+    try {
+        const response = await fetch(`${API_URL}/reportes/estadisticas`, {
+            headers: { 'Authorization': `Bearer ${getToken()}` }
+        });
+
+        if (response.status === 401) {
+            window.location.href = 'login.html';
+            return;
+        }
+
+        if (!response.ok) throw new Error('Error ' + response.status);
+
+        const stats = await response.json();
+        $('#totalEquipos').text(stats.totalEquipos || 0);
+        $('#totalAsignaciones').text(stats.totalAsignaciones || 0);
+        $('#totalMantenimientos').text(stats.totalMantenimientos || 0);
+        $('#totalUsuarios').text(stats.usuariosActivos || 0);
+
+    } catch (error) {
+        console.error('Error cargando estadísticas:', error);
+        $('#totalEquipos').text('0');
+        $('#totalAsignaciones').text('0');
+        $('#totalMantenimientos').text('0');
+        $('#totalUsuarios').text('0');
+    }
 }
 
-function generarReporte() {
-    const tipo = $('#tipoReporte').val();
+// ================================================
+// Cargar datos según tipo de reporte
+// ================================================
+async function generarReporte() {
+    tipoActual = $('#tipoReporte').val();
     const fechaInicio = $('#fechaInicio').val();
     const fechaFin = $('#fechaFin').val();
 
-    let datos = [];
-    let encabezados = [];
-
-    switch(tipo) {
-        case 'equipos':
-            datos = datosEjemplo.equipos;
-            encabezados = ['ID', 'Marca', 'Modelo', 'Serial', 'Estado', 'Ubicación'];
-            break;
-        case 'asignaciones':
-            datos = datosEjemplo.asignaciones;
-            encabezadados = ['ID', 'Fecha', 'Equipo', 'Usuario', 'Motivo'];
-            break;
-        case 'mantenimientos':
-            datos = datosEjemplo.mantenimientos;
-            encabezados = ['ID', 'Fecha', 'Tipo', 'Equipo', 'Costo'];
-            break;
-        case 'usuarios':
-            datos = datosEjemplo.usuarios;
-            encabezados = ['ID', 'Nombre', 'Correo', 'Rol', 'Estado'];
-            break;
+    let endpoint = '';
+    switch (tipoActual) {
+        case 'equipos':         endpoint = '/equipos';        break;
+        case 'asignaciones':    endpoint = '/asignaciones';   break;
+        case 'mantenimientos':  endpoint = '/mantenimientos'; break;
+        case 'usuarios':        endpoint = '/usuarios';       break;
     }
 
-    if (fechaInicio || fechaFin) {
-        datos = filtrarPorFecha(datos, fechaInicio, fechaFin);
-    }
+    try {
+        const response = await fetch(`${API_URL}${endpoint}`, {
+            headers: { 'Authorization': `Bearer ${getToken()}` }
+        });
 
-    mostrarTabla(datos, encabezados, tipo);
+        if (response.status === 401) {
+            window.location.href = 'login.html';
+            return;
+        }
+
+        if (response.status === 403) {
+            mostrarMensaje('No tienes permisos para consultar este tipo de reporte', 'error');
+            renderizarTabla([], tipoActual);
+            return;
+        }
+
+        if (!response.ok) throw new Error('Error ' + response.status);
+
+        let datos = await response.json();
+
+        // Filtrado por fecha (solo aplica a asignaciones y mantenimientos)
+        if ((fechaInicio || fechaFin) && (tipoActual === 'asignaciones' || tipoActual === 'mantenimientos')) {
+            datos = filtrarPorFecha(datos, fechaInicio, fechaFin, tipoActual);
+        }
+
+        renderizarTabla(datos, tipoActual);
+
+    } catch (error) {
+        console.error('Error generando reporte:', error);
+        mostrarMensaje('Error al cargar el reporte', 'error');
+        renderizarTabla([], tipoActual);
+    }
 }
 
-function filtrarPorFecha(datos, fechaInicio, fechaFin) {
-    if (!fechaInicio && !fechaFin) return datos;
+function filtrarPorFecha(datos, fechaInicio, fechaFin, tipo) {
+    return datos.filter(function(item) {
+        const fechaItem = (tipo === 'asignaciones') ? item.fechaAsignacion : item.fecha;
+        if (!fechaItem) return true;
 
-    return datos.filter(item => {
-        if (!item.fecha) return true;
-        const fechaItem = new Date(item.fecha);
+        const fecha = new Date(fechaItem);
         const desde = fechaInicio ? new Date(fechaInicio) : null;
         const hasta = fechaFin ? new Date(fechaFin) : null;
 
-        if (desde && hasta) return fechaItem >= desde && fechaItem <= hasta;
-        if (desde) return fechaItem >= desde;
-        if (hasta) return fechaItem <= hasta;
+        if (desde && hasta) return fecha >= desde && fecha <= hasta;
+        if (desde) return fecha >= desde;
+        if (hasta) return fecha <= hasta;
         return true;
     });
 }
 
-function mostrarTabla(datos, encabezados, tipo) {
-    if (tablaReportes) tablaReportes.destroy();
+// ================================================
+// Render de tabla según tipo
+// ================================================
+function renderizarTabla(datos, tipo) {
+    if (tablaReportes) {
+        tablaReportes.destroy();
+        tablaReportes = null;
+    }
 
     const thead = $('#encabezadoTabla');
-    thead.empty();
-    encabezados.forEach(col => thead.append(`<th>${col}</th>`));
-
     const tbody = $('#tablaReportes tbody');
+    thead.empty();
     tbody.empty();
 
-    datos.forEach(item => {
-        let fila = '';
-        switch(tipo) {
-            case 'equipos':
-                fila = `<tr>
-                            <td>${item.id}</td>
-                            <td>${item.marca}</td>
-                            <td>${item.modelo}</td>
-                            <td>${item.serial}</td>
-                            <td><span class="badge ${item.estado === 'Activo' ? 'bg-success' : 'bg-warning'}">${item.estado}</span></td>
-                            <td>${item.ubicacion}</td>
-                        </tr>`;
-                break;
-            case 'asignaciones':
-                fila = `<tr>
-                            <td>${item.id}</td>
-                            <td>${formatDate(item.fecha)}</td>
-                            <td>${item.equipo}</td>
-                            <td>${item.usuario}</td>
-                            <td>${item.motivo || '-'}</td>
-                        </tr>`;
-                break;
-            case 'mantenimientos':
-                fila = `<tr>
-                            <td>${item.id}</td>
-                            <td>${formatDate(item.fecha)}</td>
-                            <td>${item.tipo}</td>
-                            <td>${item.equipo}</td>
-                            <td>${formatCurrency(item.costo)}</td>
-                        </tr>`;
-                break;
-            case 'usuarios':
-                fila = `<tr>
-                            <td>${item.id}</td>
-                            <td>${item.nombre}</td>
-                            <td>${item.correo}</td>
-                            <td><span class="badge bg-info">${item.rol}</span></td>
-                            <td><span class="badge bg-success">${item.estado}</span></td>
-                        </tr>`;
-                break;
-        }
-        tbody.append(fila);
-    });
+    let encabezados = [];
 
-    if (datos.length === 0) {
-        tbody.append(`<tr><td colspan="${encabezados.length}" class="text-center">No hay datos disponibles</td></tr>`);
+    switch (tipo) {
+
+        case 'equipos':
+            encabezados = ['ID', 'Marca', 'Modelo', 'Serial', 'Estado', 'Ubicación'];
+            thead.append(encabezados.map(h => '<th>' + h + '</th>').join(''));
+
+            if (datos.length === 0) {
+                tbody.append('<tr><td colspan="' + encabezados.length + '" class="text-center text-muted">No hay datos</td></tr>');
+            } else {
+                datos.forEach(function(e) {
+                    const estado = e.estado ? e.estado.nombre : '-';
+                    const ubicacion = e.ubicacion
+                        ? (e.ubicacion.edificio || '') + ' ' + (e.ubicacion.sala || '')
+                        : '-';
+                    tbody.append(
+                        '<tr>' +
+                            '<td>' + (e.id || '') + '</td>' +
+                            '<td>' + (e.marca || '-') + '</td>' +
+                            '<td>' + (e.modelo || '-') + '</td>' +
+                            '<td>' + (e.serial || '-') + '</td>' +
+                            '<td><span class="badge ' + badgeEstado(estado) + '">' + estado + '</span></td>' +
+                            '<td>' + ubicacion.trim() + '</td>' +
+                        '</tr>'
+                    );
+                });
+            }
+            break;
+
+        case 'asignaciones':
+            encabezados = ['ID', 'Fecha', 'Equipo', 'Usuario', 'Motivo', 'Activa'];
+            thead.append(encabezados.map(h => '<th>' + h + '</th>').join(''));
+
+            if (datos.length === 0) {
+                tbody.append('<tr><td colspan="' + encabezados.length + '" class="text-center text-muted">No hay datos</td></tr>');
+            } else {
+                datos.forEach(function(a) {
+                    const equipo = a.equipo
+                        ? ((a.equipo.marca || '') + ' ' + (a.equipo.modelo || '')).trim()
+                        : '-';
+                    const usuario = a.usuario ? a.usuario.username : '-';
+                    const activa = a.activa ? 'Sí' : 'No';
+                    tbody.append(
+                        '<tr>' +
+                            '<td>' + (a.idAsignacion || '') + '</td>' +
+                            '<td>' + formatearFecha(a.fechaAsignacion) + '</td>' +
+                            '<td>' + equipo + '</td>' +
+                            '<td>' + usuario + '</td>' +
+                            '<td>' + (a.motivo || '-') + '</td>' +
+                            '<td><span class="badge ' + (a.activa ? 'bg-success' : 'bg-secondary') + '">' + activa + '</span></td>' +
+                        '</tr>'
+                    );
+                });
+            }
+            break;
+
+        case 'mantenimientos':
+            encabezados = ['ID', 'Fecha', 'Tipo', 'Equipo', 'Descripción', 'Costo'];
+            thead.append(encabezados.map(h => '<th>' + h + '</th>').join(''));
+
+            if (datos.length === 0) {
+                tbody.append('<tr><td colspan="' + encabezados.length + '" class="text-center text-muted">No hay datos</td></tr>');
+            } else {
+                datos.forEach(function(m) {
+                    const equipo = m.equipo
+                        ? ((m.equipo.marca || '') + ' ' + (m.equipo.modelo || '')).trim()
+                        : '-';
+                    tbody.append(
+                        '<tr>' +
+                            '<td>' + (m.idMantenimiento || '') + '</td>' +
+                            '<td>' + formatearFecha(m.fecha) + '</td>' +
+                            '<td>' + (m.tipo || '-') + '</td>' +
+                            '<td>' + equipo + '</td>' +
+                            '<td>' + (m.descripcion || '-') + '</td>' +
+                            '<td>' + formatearMoneda(m.costo) + '</td>' +
+                        '</tr>'
+                    );
+                });
+            }
+            break;
+
+        case 'usuarios':
+            encabezados = ['ID', 'Usuario', 'Rol', 'Estado'];
+            thead.append(encabezados.map(h => '<th>' + h + '</th>').join(''));
+
+            if (datos.length === 0) {
+                tbody.append('<tr><td colspan="' + encabezados.length + '" class="text-center text-muted">No hay datos</td></tr>');
+            } else {
+                datos.forEach(function(u) {
+                    const activo = (u.activo === 1) ? 'bg-success' : 'bg-secondary';
+                    tbody.append(
+                        '<tr>' +
+                            '<td>' + (u.id || '') + '</td>' +
+                            '<td>' + (u.username || '-') + '</td>' +
+                            '<td>' + (u.role || '-') + '</td>' +
+                            '<td><span class="badge ' + activo + '">' + (u.estado || '-') + '</span></td>' +
+                        '</tr>'
+                    );
+                });
+            }
+            break;
     }
 
     tablaReportes = $('#tablaReportes').DataTable({
         language: { url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json' },
         order: [[0, 'desc']],
-        pageLength: 10
+        pageLength: 10,
+        destroy: true
     });
 }
 
-function exportarAExcel() {
-    const tipo = $('#tipoReporte').val();
-    let datos = [];
-    let nombreArchivo = 'reporte_';
+function badgeEstado(estado) {
+    switch (estado) {
+        case 'Activo':
+        case 'Disponible':       return 'bg-success';
+        case 'En Uso':           return 'bg-primary';
+        case 'En Mantenimiento': return 'bg-warning text-dark';
+        case 'Dañado':           return 'bg-danger';
+        case 'Retirado':         return 'bg-secondary';
+        default:                 return 'bg-secondary';
+    }
+}
 
-    switch(tipo) {
+function formatearFecha(fechaStr) {
+    if (!fechaStr) return '-';
+    const soloFecha = String(fechaStr).substring(0, 10);
+    const partes = soloFecha.split('-');
+    if (partes.length !== 3) return fechaStr;
+    return partes[2] + '/' + partes[1] + '/' + partes[0];
+}
+
+function formatearMoneda(valor) {
+    if (valor === null || valor === undefined) return '-';
+    const numero = Number(valor);
+    if (isNaN(numero)) return valor;
+    return '$' + numero.toLocaleString('es-CO');
+}
+
+function mostrarMensaje(texto, tipo) {
+    if (typeof showSuccess === 'function' && tipo === 'success') {
+        showSuccess(texto);
+        return;
+    }
+    if (typeof showError === 'function' && tipo === 'error') {
+        showError(texto);
+        return;
+    }
+    if (window.Swal) {
+        Swal.fire({
+            icon: tipo === 'error' ? 'error' : 'success',
+            text: texto,
+            timer: 2500,
+            showConfirmButton: false
+        });
+    } else {
+        alert(texto);
+    }
+}
+
+// ================================================
+// Exportar a Excel (descarga desde el backend)
+// ================================================
+async function exportarAExcel() {
+    const tipo = $('#tipoReporte').val();
+
+    let endpoint = '';
+    let nombreArchivo = '';
+
+    switch (tipo) {
         case 'equipos':
-            datos = datosEjemplo.equipos;
-            nombreArchivo += 'equipos';
+            endpoint = '/reportes/export/equipos/excel';
+            nombreArchivo = 'equipos.xlsx';
             break;
         case 'asignaciones':
-            datos = datosEjemplo.asignaciones;
-            nombreArchivo += 'asignaciones';
+            endpoint = '/reportes/export/asignaciones/excel';
+            nombreArchivo = 'asignaciones.xlsx';
             break;
         case 'mantenimientos':
-            datos = datosEjemplo.mantenimientos;
-            nombreArchivo += 'mantenimientos';
+            endpoint = '/reportes/export/mantenimientos/excel';
+            nombreArchivo = 'mantenimientos.xlsx';
             break;
         case 'usuarios':
-            datos = datosEjemplo.usuarios;
-            nombreArchivo += 'usuarios';
+            endpoint = '/reportes/export/usuarios/excel';
+            nombreArchivo = 'usuarios.xlsx';
             break;
+        default:
+            mostrarMensaje('Tipo de reporte no soportado', 'error');
+            return;
     }
 
-    const ws = XLSX.utils.json_to_sheet(datos);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Reporte');
-    XLSX.writeFile(wb, `${nombreArchivo}_${new Date().toISOString().split('T')[0]}.xlsx`);
-    showSuccess('Reporte exportado correctamente');
+    try {
+        const response = await fetch(`${API_URL}${endpoint}`, {
+            headers: { 'Authorization': `Bearer ${getToken()}` }
+        });
+
+        if (response.status === 401) {
+            window.location.href = 'login.html';
+            return;
+        }
+
+        if (response.status === 403) {
+            mostrarMensaje('No tienes permisos para exportar este reporte', 'error');
+            return;
+        }
+
+        if (!response.ok) throw new Error('Error ' + response.status);
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = nombreArchivo;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+
+        mostrarMensaje('Reporte exportado correctamente', 'success');
+
+    } catch (error) {
+        console.error('Error exportando:', error);
+        mostrarMensaje('Error al exportar el reporte', 'error');
+    }
 }

@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface MantenimientoRepository extends JpaRepository<Mantenimiento, Long> {
+    long count();
 }

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
+
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -18,14 +19,22 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (usuarioRepository.findByUsername("admin").isEmpty()) {
-            Usuario admin = Usuario.builder()
-                    .username("admin")
-                    .password(passwordEncoder.encode("admin123"))
-                    .role("ROLE_ADMIN")
+        crearSiNoExiste("admin",   "admin123",   "ROLE_ADMIN");
+        crearSiNoExiste("tecnico", "tecnico123", "ROLE_TECNICO");
+        crearSiNoExiste("usuario", "usuario123", "ROLE_USER");
+    }
+
+    private void crearSiNoExiste(String username, String rawPassword, String role) {
+        if (usuarioRepository.findByUsername(username).isEmpty()) {
+            Usuario u = Usuario.builder()
+                    .username(username)
+                    .password(passwordEncoder.encode(rawPassword))
+                    .role(role)
+                    .activo(1)
+                    .estado("Activo")
                     .build();
-            usuarioRepository.save(admin);
-            System.out.println("Usuario admin creado con éxito");
+            usuarioRepository.save(u);
+            System.out.println("Usuario creado: " + username + " [" + role + "]");
         }
     }
 }
