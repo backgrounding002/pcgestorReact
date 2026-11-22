@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -42,6 +43,11 @@ public class MantenimientoService {
 
     @Transactional
     public MantenimientoResponseDTO crear(MantenimientoDTO dto) {
+        // Validación del costo negativo
+        if (dto.getCosto() == null || dto.getCosto().compareTo(BigDecimal.ZERO) < 0) {
+            throw new RuntimeException("El costo debe ser mayor o igual a cero");
+        }
+
         Equipo equipo = equipoRepository.findById(dto.getEquipoId())
                 .orElseThrow(() -> new RuntimeException("Equipo no encontrado con ID: " + dto.getEquipoId()));
 
@@ -65,6 +71,11 @@ public class MantenimientoService {
     public MantenimientoResponseDTO actualizar(Long id, MantenimientoDTO dto) {
         Mantenimiento mantenimiento = mantenimientoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Mantenimiento no encontrado con ID: " + id));
+
+        // Validación del costo negativo (también aplica para actualizaciones)
+        if (dto.getCosto() == null || dto.getCosto().compareTo(BigDecimal.ZERO) < 0) {
+            throw new RuntimeException("El costo debe ser mayor o igual a cero");
+        }
 
         Equipo equipo = equipoRepository.findById(dto.getEquipoId())
                 .orElseThrow(() -> new RuntimeException("Equipo no encontrado con ID: " + dto.getEquipoId()));

@@ -1,6 +1,7 @@
 package com.pcgestor.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import javax.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -8,6 +9,8 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "mantenimiento")
+// La siguiente anotación evita errores de serialización JSON (el error genérico del frontend)
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Mantenimiento {
 
     @Id
@@ -36,6 +39,7 @@ public class Mantenimiento {
     @Column(name = "fecha_creacion")
     private LocalDateTime fechaCreacion;
 
+    // Se añade @JsonIgnoreProperties aquí también para prevenir errores en cascada
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "equipo_id", insertable = false, updatable = false)

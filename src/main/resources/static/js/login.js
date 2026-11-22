@@ -93,27 +93,27 @@ document.addEventListener('DOMContentLoaded', function() {
             if (response.ok && data && data.token) {
                 // Guardar datos en localStorage
                 localStorage.setItem('token', data.token);
-                localStorage.setItem('user', JSON.stringify({ 
-                    nombre: username, 
-                    rol: data.rol || 'Administrador' 
+                localStorage.setItem('user', JSON.stringify({
+                    nombre: username,
+                    rol: data.rol || 'Administrador'
                 }));
 
                 // Mensaje de éxito
                 await Swal.fire({
                     icon: 'success',
                     title: '¡Bienvenido!',
-                    text: `Inicio de sesión exitoso. Redirigiendo al dashboard...`,
-                    timer: 2000,
+                    text: 'Inicio de sesión exitoso. Redirigiendo al dashboard...',
+                    timer: 1500,
                     timerProgressBar: true,
                     showConfirmButton: false
                 });
 
-                // Redirigir después del mensaje
-                window.location.href = 'index.html';
+                // Redirigir a dashboard.html (antes iba a index.html)
+                window.location.href = 'dashboard.html';
             } else {
                 // Credenciales incorrectas u otro error
                 let mensajeError = 'Credenciales incorrectas. Por favor verifique su usuario y contraseña.';
-                
+
                 if (data && data.message) {
                     const msg = data.message.toLowerCase();
                     if (msg.includes('usuario') || msg.includes('user')) {
@@ -148,7 +148,7 @@ document.addEventListener('DOMContentLoaded', function() {
             Swal.close();
 
             console.error('Error de conexión:', error);
-            
+
             let mensajeError = 'No se pudo conectar con el servidor. Verifique su conexión a internet.';
             if (error.message) {
                 if (error.message.includes('Failed to fetch')) {
