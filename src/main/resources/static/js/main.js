@@ -15,17 +15,50 @@ $(document).ready(function() {
         $('#userName').text(user.nombre);
         $('#userRol').text(user.rol || 'Usuario');
     } else if (token) {
-        // Si no hay user pero sí token, intentar decodificar (opcional)
         $('#userName').text('Usuario');
         $('#userRol').text('Administrador');
     }
 
-    // Sidebar toggle
+    // =========================================================
+    // CONTROL DE ACCESO AL MENÚ LATERAL Y RUTAS SEGÚN ROL
+    // =========================================================
+    const rol = user.rol;
+
+    // Función para ocultar el menú (oculta el enlace <a> y su contenedor si es necesario)
+    const ocultarMenu = (idMenu) => {
+        const menu = document.getElementById(idMenu);
+        if (menu) {
+            // Si está dentro de un <li> o un <div>, ocultamos el padre. Si no, ocultamos el enlace directo.
+            menu.parentElement.style.display = 'none';
+        }
+    };
+
+    if (rol === 'ROLE_USER') {
+        // Usuarios normales no ven Usuarios ni Reportes
+        ocultarMenu('menu-usuarios');
+        ocultarMenu('menu-reportes');
+    } else if (rol === 'ROLE_TECNICO') {
+        // Técnicos no ven Usuarios (solo Admin)
+        ocultarMenu('menu-usuarios');
+        // Los técnicos SÍ ven Reportes, así que no se oculta.
+    }
+
+    // Proteger URLs directamente (por si escriben la ruta manualmente)
+    const path = window.location.pathname;
+    if (rol !== 'ROLE_ADMIN' && path.includes('usuarios.html')) {
+        window.location.href = 'dashboard.html';
+    }
+    if (rol !== 'ROLE_ADMIN' && rol !== 'ROLE_TECNICO' && path.includes('reportes.html')) {
+        window.location.href = 'dashboard.html';
+    }
+
+    // =========================================================
+    // EVENTOS GENERALES (Sidebar y Logout)
+    // =========================================================
     $('#sidebarToggle').on('click', function() {
         $('#layoutSidenav_nav').toggleClass('show');
     });
 
-    // Logout
     $('#btnLogout').on('click', function() {
         Swal.fire({
             title: '¿Cerrar sesión?',

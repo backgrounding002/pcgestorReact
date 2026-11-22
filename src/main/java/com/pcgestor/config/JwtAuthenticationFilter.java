@@ -26,6 +26,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain chain) throws ServletException, IOException {
+        
+        // --- SOLUCIÓN: IGNORAR RUTAS PÚBLICAS ---
+        String requestURI = request.getRequestURI();
+        if (requestURI.contains("/api/auth/")) {
+            chain.doFilter(request, response);
+            return; // Termina la ejecución del filtro y deja pasar la petición
+        }
+        // ----------------------------------------
+
         String authHeader = request.getHeader("Authorization");
         System.out.println("=== JwtAuthenticationFilter ===");
         System.out.println("URI: " + request.getRequestURI());

@@ -95,7 +95,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('user', JSON.stringify({
                     nombre: username,
+<<<<<<< HEAD
                     rol: data.rol || 'Administrador'
+=======
+                    rol: data.rol // CAMBIO: Se guarda el rol exacto de la BD (ej. ROLE_ADMIN)
+>>>>>>> dc4bf93 (feat: implementacion de modulos de seguridad y recuperacion)
                 }));
 
                 // Mensaje de éxito
@@ -108,7 +112,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     showConfirmButton: false
                 });
 
+<<<<<<< HEAD
                 // Redirigir a dashboard.html (antes iba a index.html)
+=======
+                // Redirigir a dashboard.html
+>>>>>>> dc4bf93 (feat: implementacion de modulos de seguridad y recuperacion)
                 window.location.href = 'dashboard.html';
             } else {
                 // Credenciales incorrectas u otro error
@@ -170,31 +178,144 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Enlaces (funcionalidad pendiente)
+    // =========================================================
+    // NUEVA LÓGICA: Registro y Recuperación de Contraseña
+    // =========================================================
     const btnRegistro = document.getElementById('btnRegistro');
     const btnRecuperar = document.getElementById('btnRecuperar');
 
+    // 1. Funcionalidad de Registro
     if (btnRegistro) {
         btnRegistro.addEventListener('click', (e) => {
             e.preventDefault();
+            
             Swal.fire({
-                icon: 'info',
-                title: 'Registro',
-                text: 'Funcionalidad en desarrollo',
-                confirmButtonText: 'Entendido'
+                title: 'Registro de Usuario',
+                html: `
+                    <input id="reg-user" class="swal2-input" placeholder="Nombre de usuario">
+                    <input id="reg-pass" type="password" class="swal2-input" placeholder="Contraseña">
+                `,
+                focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonText: 'Registrarse',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#3085d6',
+                preConfirm: () => {
+                    const user = document.getElementById('reg-user').value;
+                    const pass = document.getElementById('reg-pass').value;
+                    if (!user || !pass) {
+                        Swal.showValidationMessage('Llena todos los campos');
+                    }
+                    return { username: user, password: pass };
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch('/pcgestor/api/auth/register', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(result.value)
+                    })
+                    .then(res => {
+                        if (res.status === 201 || res.status === 200) {
+                            Swal.fire('¡Bienvenido!', 'Usuario registrado exitosamente. Ya puedes iniciar sesión.', 'success');
+                        } else {
+                            return res.json().then(data => {
+                                throw new Error(data.error || 'El usuario ya existe o los datos son inválidos.');
+                            });
+                        }
+                    })
+                    .catch(err => Swal.fire('Error', err.message, 'error'));
+                }
             });
         });
     }
 
+    // 2. Funcionalidad de Recuperación de Contraseña
     if (btnRecuperar) {
         btnRecuperar.addEventListener('click', (e) => {
             e.preventDefault();
+            
             Swal.fire({
-                icon: 'info',
-                title: 'Recuperar contraseña',
-                text: 'Funcionalidad en desarrollo',
-                confirmButtonText: 'Entendido'
+                title: 'Recuperar Contraseña',
+                input: 'text',
+                inputLabel: 'Ingresa tu nombre de usuario',
+                inputPlaceholder: 'Ej: admin',
+                showCancelButton: true,
+                confirmButtonText: 'Generar Token',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#3085d6',
+                inputValidator: (value) => {
+                    if (!value) return '¡Debes escribir tu usuario!';
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch('/pcgestor/api/auth/forgot-password', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username: result.value })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.error) {
+                            Swal.fire('Error', data.error, 'error');
+                        } else {
+                            Swal.fire({
+                                title: '¡Token Generado!',
+                                html: `<p>Se ha generado un token de recuperación.</p>
+                                       <p><b>Copia este token:</b></p>
+                                       <code style="background:#f4f4f4; padding:8px; border-radius:5px; font-size:14px; display:block; margin-top:10px;">${data.token_simulado}</code>`,
+                                icon: 'success',
+                                confirmButtonText: 'Ir a cambiar contraseña',
+                                confirmButtonColor: '#3085d6'
+                            }).then(() => {
+                                mostrarModalReset();
+                            });
+                        }
+                    })
+                    .catch(err => Swal.fire('Error', 'Error de conexión con el servidor', 'error'));
+                }
             });
+        });
+    }
+
+    // Función interna para el segundo modal de recuperación
+    function mostrarModalReset() {
+        Swal.fire({
+            title: 'Nueva Contraseña',
+            html: `
+                <input id="swal-token" class="swal2-input" placeholder="Pega el Token aquí" style="margin-bottom: 10px;">
+                <input id="swal-pass" type="password" class="swal2-input" placeholder="Nueva Contraseña">
+            `,
+            focusConfirm: false,
+            showCancelButton: true,
+            confirmButtonText: 'Cambiar Contraseña',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#3085d6',
+            preConfirm: () => {
+                const token = document.getElementById('swal-token').value;
+                const pass = document.getElementById('swal-pass').value;
+                if (!token || !pass) {
+                    Swal.showValidationMessage('Ambos campos son obligatorios');
+                }
+                return { token: token, nuevaPassword: pass };
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch('/pcgestor/api/auth/reset-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(result.value)
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.error) {
+                        Swal.fire('Error', data.error, 'error');
+                    } else {
+                        Swal.fire('Éxito', data.mensaje, 'success');
+                    }
+                })
+                .catch(err => Swal.fire('Error', 'Error al conectar con el servidor', 'error'));
+            }
         });
     }
 });
